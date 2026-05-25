@@ -11,3 +11,35 @@ def.var: GREEN
 def.var: BLUE
     string
     "#3b82f6"
+
+def.var: CYAN
+    string
+    "#06b6d4"
+
+def.var: MAGENTA
+    string
+    "#d946ef"
+
+def.var: YELLOW
+    string
+    "#facc15"
+
+def.var: ORANGE
+    string
+    "#fb923c"
+
+def.var: PURPLE
+    string
+    "#8b5cf6"
+
+def.var: PINK
+    string
+    "#ec4899"
+
+def.var: BLACK
+    string
+    "#0f172a"
+
+def.var: WHITE
+    string
+    "#f8fafc"
