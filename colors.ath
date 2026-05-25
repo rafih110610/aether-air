@@ -1,0 +1,13 @@
+#! Simple color constants package for Aether demos.
+
+def.var: RED
+    string
+    "#ff4d4d"
+
+def.var: GREEN
+    string
+    "#32c671"
+
+def.var: BLUE
+    string
+    "#3b82f6"
