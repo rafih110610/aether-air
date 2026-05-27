@@ -95,6 +95,155 @@ def.fun: SendMessage(bot:dynamic, channelId:string, content:string) -> dynamic
         {"content": content}
     Give: http_post_json(route, payload, bot["auth"])
 
+def.fun: SendRichMessage(bot:dynamic, channelId:string, payload:dynamic) -> dynamic
+    def.var: route
+        string
+        APIBase + "/channels/" + channelId + "/messages"
+    Give: http_post_json(route, payload, bot["auth"])
+
+def.fun: SendEmbedMessage(bot:dynamic, channelId:string, embed:dynamic) -> dynamic
+    def.var: route
+        string
+        APIBase + "/channels/" + channelId + "/messages"
+    def.var: payload
+        dynamic
+        {"embeds": [embed]}
+    Give: http_post_json(route, payload, bot["auth"])
+
+def.fun: EditMessage(bot:dynamic, channelId:string, messageId:string, content:string) -> dynamic
+    def.var: route
+        string
+        APIBase + "/channels/" + channelId + "/messages/" + messageId
+    def.var: payload
+        dynamic
+        {"content": content}
+    Give: http_patch_json(route, payload, bot["auth"])
+
+def.fun: DeleteMessage(bot:dynamic, channelId:string, messageId:string) -> dynamic
+    def.var: route
+        string
+        APIBase + "/channels/" + channelId + "/messages/" + messageId
+    Give: http_delete(route, bot["auth"])
+
+def.fun: TriggerTyping(bot:dynamic, channelId:string) -> dynamic
+    def.var: route
+        string
+        APIBase + "/channels/" + channelId + "/typing"
+    Give: http_post_json(route, {}, bot["auth"])
+
+def.fun: AddReaction(bot:dynamic, channelId:string, messageId:string, emoji:string) -> dynamic
+    def.var: route
+        string
+        APIBase + "/channels/" + channelId + "/messages/" + messageId + "/reactions/" + emoji + "/@me"
+    Give: http_put_json(route, {}, bot["auth"])
+
+def.fun: RemoveOwnReaction(bot:dynamic, channelId:string, messageId:string, emoji:string) -> dynamic
+    def.var: route
+        string
+        APIBase + "/channels/" + channelId + "/messages/" + messageId + "/reactions/" + emoji + "/@me"
+    Give: http_delete(route, bot["auth"])
+
+def.fun: GetMe(bot:dynamic) -> dynamic
+    Give: http_get(APIBase + "/users/@me", bot["auth"])
+
+def.fun: GetGuild(bot:dynamic, guildId:string) -> dynamic
+    Give: http_get(APIBase + "/guilds/" + guildId, bot["auth"])
+
+def.fun: GetChannel(bot:dynamic, channelId:string) -> dynamic
+    Give: http_get(APIBase + "/channels/" + channelId, bot["auth"])
+
+def.fun: GetMessage(bot:dynamic, channelId:string, messageId:string) -> dynamic
+    Give: http_get(APIBase + "/channels/" + channelId + "/messages/" + messageId, bot["auth"])
+
+def.fun: CreateDM(bot:dynamic, userId:string) -> dynamic
+    Give: http_post_json(APIBase + "/users/@me/channels", {"recipient_id": userId}, bot["auth"])
+
+def.fun: SendDM(bot:dynamic, userId:string, content:string) -> dynamic
+    def.var: dm
+        dynamic
+        CreateDM(bot, userId)
+    if dm["ok"]:
+        def.var: dmChannel
+            dynamic
+            json_loads(dm["body"])
+        Give: SendMessage(bot, dmChannel["id"], content)
+    Give: dm
+
+def.fun: RegisterGlobalSlashCommand(bot:dynamic, appId:string, name:string, description:string) -> dynamic
+    def.var: route
+        string
+        APIBase + "/applications/" + appId + "/commands"
+    def.var: payload
+        dynamic
+        {"name": name, "description": description, "type": 1}
+    Give: http_post_json(route, payload, bot["auth"])
+
+def.fun: ReplyInteraction(bot:dynamic, interactionId:string, interactionToken:string, content:string) -> dynamic
+    def.var: route
+        string
+        APIBase + "/interactions/" + interactionId + "/" + interactionToken + "/callback"
+    def.var: payload
+        dynamic
+        {"type": 4, "data": {"content": content}}
+    Give: http_post_json(route, payload, bot["auth"])
+
+def.fun: FollowupInteraction(bot:dynamic, appId:string, interactionToken:string, content:string) -> dynamic
+    def.var: route
+        string
+        APIBase + "/webhooks/" + appId + "/" + interactionToken
+    def.var: payload
+        dynamic
+        {"content": content}
+    Give: http_post_json(route, payload, bot["auth"])
+
+def.fun: BuildEmbed(title:string, description:string, color:int) -> dynamic
+    Give: {"title": title, "description": description, "color": color}
+
+def.fun: BuildAllowedMentions(parseEveryone:boolean, parseRoles:boolean, parseUsers:boolean) -> dynamic
+    def.var: parse
+        dynamic
+        []
+    if parseEveryone:
+        make: parse = ["everyone"]
+    if parseRoles:
+        make: parse = parse + ["roles"]
+    if parseUsers:
+        make: parse = parse + ["users"]
+    Give: {"parse": parse}
+
+def.fun: ParseGatewayOpcode(eventPacket:dynamic) -> int
+    Give: eventPacket["event"]["op"]
+
+def.fun: ParseGatewaySeq(eventPacket:dynamic) -> dynamic
+    Give: eventPacket["event"]["s"]
+
+def.fun: ParseGatewayType(eventPacket:dynamic) -> dynamic
+    Give: eventPacket["event"]["t"]
+
+def.fun: ParseGatewayData(eventPacket:dynamic) -> dynamic
+    Give: eventPacket["event"]["d"]
+
+def.fun: IsGatewayDispatch(eventPacket:dynamic) -> boolean
+    Give: ParseGatewayOpcode(eventPacket) == 0
+
+def.fun: IsGatewayHello(eventPacket:dynamic) -> boolean
+    Give: ParseGatewayOpcode(eventPacket) == 10
+
+def.fun: IsGatewayHeartbeatAck(eventPacket:dynamic) -> boolean
+    Give: ParseGatewayOpcode(eventPacket) == 11
+
+def.fun: GatewaySetPresence(socketId:int, status:string, afk:boolean) -> dynamic
+    def.var: payload
+        dynamic
+        {"op": 3, "d": {"since": 0, "activities": [], "status": status, "afk": afk}}
+    Give: ws_send_text(socketId, json_dumps(payload))
+
+def.fun: GatewayRequestGuildMembers(socketId:int, guildId:string, query:string, limit:int) -> dynamic
+    def.var: payload
+        dynamic
+        {"op": 8, "d": {"guild_id": guildId, "query": query, "limit": limit}}
+    Give: ws_send_text(socketId, json_dumps(payload))
+
 def.fun: SendWebhook(webhookUrl:string, content:string) -> dynamic
     Give: http_post_json(webhookUrl, {"content": content}, "")
 
