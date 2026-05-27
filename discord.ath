@@ -1,0 +1,114 @@
+#! discord.ath
+#! Discord.py-inspired starter module for Aether.
+
+def.var: APIBase
+    string
+    "https://discord.com/api/v10"
+
+def.var: GatewayBase
+    string
+    "wss://gateway.discord.gg"
+
+def.fun: IntentsDefault() -> dynamic
+    Give: {"guilds": TRUE, "guild_messages": TRUE, "direct_messages": TRUE, "message_content": FALSE, "guild_members": FALSE, "guild_presences": FALSE, "typing": FALSE, "reactions": TRUE}
+
+def.fun: IntentsAll() -> dynamic
+    Give: {"guilds": TRUE, "guild_messages": TRUE, "direct_messages": TRUE, "message_content": TRUE, "guild_members": TRUE, "guild_presences": TRUE, "typing": TRUE, "reactions": TRUE}
+
+def.fun: IntentsDefaultValue() -> int
+    Give: 513
+
+def.fun: IntentsMessageContentValue() -> int
+    Give: 33281
+
+def.fun: CreateBot(prefix:string, intents:dynamic) -> dynamic
+    Give: {"prefix": prefix, "intents": intents, "token": "", "auth": "", "commands": [], "events": []}
+
+def.fun: WithToken(bot:dynamic, token:string) -> dynamic
+    def.var: auth
+        string
+        "Bot " + token
+    Give: {"prefix": bot["prefix"], "intents": bot["intents"], "token": token, "auth": auth, "commands": bot["commands"], "events": bot["events"]}
+
+def.fun: Login(token:string) -> dynamic
+    def.var: auth
+        string
+        "Bot " + token
+    def.var: me
+        dynamic
+        http_get(APIBase + "/users/@me", auth)
+    Give: {"token": token, "auth": auth, "session": me}
+
+def.fun: GatewayInfo(bot:dynamic) -> dynamic
+    Give: http_get(APIBase + "/gateway/bot", bot["auth"])
+
+def.fun: GatewayOpen(url:string) -> dynamic
+    Give: ws_connect(url + "?v=10&encoding=json")
+
+def.fun: GatewayIdentify(socketId:int, token:string, intents:int) -> dynamic
+    def.var: identify
+        dynamic
+        {"op": 2, "d": {"token": token, "intents": intents, "properties": {"os": "aether", "browser": "aether", "device": "aether"}}}
+    Give: ws_send_text(socketId, json_dumps(identify))
+
+def.fun: GatewayHeartbeat(socketId:int, seq:int) -> dynamic
+    def.var: heartbeat
+        dynamic
+        {"op": 1, "d": seq}
+    Give: ws_send_text(socketId, json_dumps(heartbeat))
+
+def.fun: GatewayRecv(socketId:int) -> dynamic
+    def.var: packet
+        dynamic
+        ws_recv_text(socketId)
+    if packet["ok"]:
+        Give: {"ok": TRUE, "socket_id": socketId, "raw": packet["text"], "event": json_loads(packet["text"])}
+    Give: packet
+
+def.fun: GatewayClose(socketId:int) -> dynamic
+    Give: ws_close(socketId)
+
+def.fun: IsSuccess(result:dynamic) -> boolean
+    Give: result["ok"]
+
+def.fun: StatusCode(result:dynamic) -> int
+    Give: result["status"]
+
+def.fun: BodyText(result:dynamic) -> string
+    Give: result["body"]
+
+def.fun: Command(name:string, description:string) -> dynamic
+    Give: {"type": "command", "name": name, "description": description}
+
+def.fun: Event(name:string) -> dynamic
+    Give: {"type": "event", "name": name}
+
+def.fun: BuildMessage(channelId:string, content:string) -> dynamic
+    Give: {"channel_id": channelId, "content": content, "tts": FALSE}
+
+def.fun: SendMessage(bot:dynamic, channelId:string, content:string) -> dynamic
+    def.var: route
+        string
+        APIBase + "/channels/" + channelId + "/messages"
+    def.var: payload
+        dynamic
+        {"content": content}
+    Give: http_post_json(route, payload, bot["auth"])
+
+def.fun: SendWebhook(webhookUrl:string, content:string) -> dynamic
+    Give: http_post_json(webhookUrl, {"content": content}, "")
+
+def.fun: Mention(userId:string) -> string
+    Give: "<@" + userId + ">"
+
+def.fun: Channel(channelId:string) -> string
+    Give: "<#" + channelId + ">"
+
+def.fun: Role(roleId:string) -> string
+    Give: "<@&" + roleId + ">"
+
+def.fun: Emoji(name:string, emojiId:string) -> string
+    Give: "<:" + name + ":" + emojiId + ">"
+
+def.fun: ReadyPayload(botName:string) -> dynamic
+    Give: {"status": "ready", "bot": botName, "gateway": GatewayBase}

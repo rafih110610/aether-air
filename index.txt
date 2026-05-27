@@ -1,2 +1,3 @@
 name|source|description
 colors|./colors.ath|Basic Color Constraints
+discord|./discord.ath|Discord.py-inspired bot and gateway helper API
