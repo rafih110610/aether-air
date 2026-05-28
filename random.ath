@@ -1,0 +1,22 @@
+#! random.ath
+#! Pseudo-random module for Aether (Python-like)
+
+def.var: currentSeed
+    int
+    0
+
+def.fun: Seed(value:int) -> dynamic
+    currentSeed is value
+    Give: random_seed(value)
+
+def.fun: Random() -> float
+    Give: random_float()
+
+def.fun: RandInt(a:int, b:int) -> int
+    Give: random_int(a, b)
+
+def.fun: Choice(items:dynamic) -> dynamic
+    Give: random_choice(items)
+
+def.fun: Shuffle(items:dynamic) -> dynamic
+    Give: random_shuffle(items)
