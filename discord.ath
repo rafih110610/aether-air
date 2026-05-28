@@ -382,6 +382,58 @@ def.fun: UseToken(token:string) -> dynamic
     ActiveSession is authed
     Give: authed
 
+def.fun: RunActive() -> dynamic
+    if ActiveToken == "":
+        flag: "No active Discord token. Call UseToken(token) first."
+
+    def.var: info
+        dynamic
+        http_get("https://discord.com/api/v10" + "/gateway/bot", ActiveSession["auth"])
+    if not info["ok"]:
+        Give: info
+
+    def.var: details
+        dynamic
+        json_loads(info["body"])
+
+    def.var: opened
+        dynamic
+        ws_connect(details["url"] + "?v=10&encoding=json")
+    if not opened["ok"]:
+        Give: opened
+
+    def.var: sid
+        int
+        opened["socket_id"]
+
+    def.var: identify
+        dynamic
+        {"op": 2, "d": {"token": ActiveSession["token"], "intents": ActiveSession["intents"], "properties": {"os": "aether", "browser": "aether", "device": "aether"}}}
+    ws_send_text(sid, json_dumps(identify))
+
+    def.var: intervalSeconds
+        float
+        30
+    def.var: hello
+        dynamic
+        ws_recv_text(sid)
+    if hello["ok"]:
+        def.var: helloPacket
+            dynamic
+            {"ok": TRUE, "socket_id": sid, "raw": hello["text"], "event": json_loads(hello["text"])}
+        if helloPacket["event"]["op"] == 10:
+            def.var: helloData
+                dynamic
+                helloPacket["event"]["d"]
+            def.var: heartbeatInterval
+                float
+                helloData["heartbeat_interval"]
+            make: intervalSeconds = heartbeatInterval / 1000
+
+    Repeat:
+        ws_send_text(sid, json_dumps({"op": 1, "d": 0}))
+        time_sleep(intervalSeconds)
+
 def.fun: Session() -> dynamic
     if ActiveToken == "":
         flag: "No active Discord token. Call UseToken(token) first."
