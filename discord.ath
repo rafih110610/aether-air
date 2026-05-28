@@ -9,6 +9,14 @@ def.var: GatewayBase
     string
     "wss://gateway.discord.gg"
 
+def.var: ActiveToken
+    string
+    ""
+
+def.var: ActiveSession
+    dynamic
+    {}
+
 def.fun: IntentsDefault() -> dynamic
     Give: {"guilds": TRUE, "guild_messages": TRUE, "direct_messages": TRUE, "message_content": FALSE, "guild_members": FALSE, "guild_presences": FALSE, "typing": FALSE, "reactions": TRUE}
 
@@ -261,3 +269,345 @@ def.fun: Emoji(name:string, emojiId:string) -> string
 
 def.fun: ReadyPayload(botName:string) -> dynamic
     Give: {"status": "ready", "bot": botName, "gateway": GatewayBase}
+
+#! =========================
+#! Extended Discord.py-like REST Surface
+#! =========================
+
+def.fun: ApiGet(bot:dynamic, route:string) -> dynamic
+    Give: http_get(APIBase + route, bot["auth"])
+
+def.fun: ApiPost(bot:dynamic, route:string, payload:dynamic) -> dynamic
+    Give: http_post_json(APIBase + route, payload, bot["auth"])
+
+def.fun: ApiPut(bot:dynamic, route:string, payload:dynamic) -> dynamic
+    Give: http_put_json(APIBase + route, payload, bot["auth"])
+
+def.fun: ApiPatch(bot:dynamic, route:string, payload:dynamic) -> dynamic
+    Give: http_patch_json(APIBase + route, payload, bot["auth"])
+
+def.fun: ApiDelete(bot:dynamic, route:string) -> dynamic
+    Give: http_delete(APIBase + route, bot["auth"])
+
+def.fun: FetchUser(bot:dynamic, userId:string) -> dynamic
+    Give: ApiGet(bot, "/users/" + userId)
+
+def.fun: FetchGuilds(bot:dynamic) -> dynamic
+    Give: ApiGet(bot, "/users/@me/guilds")
+
+def.fun: FetchGuildChannels(bot:dynamic, guildId:string) -> dynamic
+    Give: ApiGet(bot, "/guilds/" + guildId + "/channels")
+
+def.fun: FetchGuildRoles(bot:dynamic, guildId:string) -> dynamic
+    Give: ApiGet(bot, "/guilds/" + guildId + "/roles")
+
+def.fun: FetchGuildMember(bot:dynamic, guildId:string, userId:string) -> dynamic
+    Give: ApiGet(bot, "/guilds/" + guildId + "/members/" + userId)
+
+def.fun: EditGuildMemberNick(bot:dynamic, guildId:string, nick:string) -> dynamic
+    Give: ApiPatch(bot, "/guilds/" + guildId + "/members/@me", {"nick": nick})
+
+def.fun: AddGuildMemberRole(bot:dynamic, guildId:string, userId:string, roleId:string) -> dynamic
+    Give: ApiPut(bot, "/guilds/" + guildId + "/members/" + userId + "/roles/" + roleId, {})
+
+def.fun: RemoveGuildMemberRole(bot:dynamic, guildId:string, userId:string, roleId:string) -> dynamic
+    Give: ApiDelete(bot, "/guilds/" + guildId + "/members/" + userId + "/roles/" + roleId)
+
+def.fun: BanMember(bot:dynamic, guildId:string, userId:string, deleteMessageSeconds:int) -> dynamic
+    Give: ApiPut(bot, "/guilds/" + guildId + "/bans/" + userId, {"delete_message_seconds": deleteMessageSeconds})
+
+def.fun: UnbanMember(bot:dynamic, guildId:string, userId:string) -> dynamic
+    Give: ApiDelete(bot, "/guilds/" + guildId + "/bans/" + userId)
+
+def.fun: BulkDeleteMessages(bot:dynamic, channelId:string, messageIds:dynamic) -> dynamic
+    Give: ApiPost(bot, "/channels/" + channelId + "/messages/bulk-delete", {"messages": messageIds})
+
+def.fun: PinMessage(bot:dynamic, channelId:string, messageId:string) -> dynamic
+    Give: ApiPut(bot, "/channels/" + channelId + "/pins/" + messageId, {})
+
+def.fun: UnpinMessage(bot:dynamic, channelId:string, messageId:string) -> dynamic
+    Give: ApiDelete(bot, "/channels/" + channelId + "/pins/" + messageId)
+
+def.fun: FetchPinnedMessages(bot:dynamic, channelId:string) -> dynamic
+    Give: ApiGet(bot, "/channels/" + channelId + "/pins")
+
+def.fun: CreateGuildTextChannel(bot:dynamic, guildId:string, name:string, topic:string) -> dynamic
+    Give: ApiPost(bot, "/guilds/" + guildId + "/channels", {"name": name, "type": 0, "topic": topic})
+
+def.fun: EditChannel(bot:dynamic, channelId:string, payload:dynamic) -> dynamic
+    Give: ApiPatch(bot, "/channels/" + channelId, payload)
+
+def.fun: DeleteChannel(bot:dynamic, channelId:string) -> dynamic
+    Give: ApiDelete(bot, "/channels/" + channelId)
+
+def.fun: CreatePublicThread(bot:dynamic, channelId:string, messageId:string, name:string, autoArchiveMinutes:int) -> dynamic
+    Give: ApiPost(bot, "/channels/" + channelId + "/messages/" + messageId + "/threads", {"name": name, "auto_archive_duration": autoArchiveMinutes})
+
+def.fun: CreateWebhook(bot:dynamic, channelId:string, name:string) -> dynamic
+    Give: ApiPost(bot, "/channels/" + channelId + "/webhooks", {"name": name})
+
+def.fun: FetchApplication(bot:dynamic) -> dynamic
+    Give: ApiGet(bot, "/oauth2/applications/@me")
+
+def.fun: FetchGlobalCommands(bot:dynamic, appId:string) -> dynamic
+    Give: ApiGet(bot, "/applications/" + appId + "/commands")
+
+def.fun: CreateGlobalCommand(bot:dynamic, appId:string, commandPayload:dynamic) -> dynamic
+    Give: ApiPost(bot, "/applications/" + appId + "/commands", commandPayload)
+
+def.fun: EditGlobalCommand(bot:dynamic, appId:string, commandId:string, commandPayload:dynamic) -> dynamic
+    Give: ApiPatch(bot, "/applications/" + appId + "/commands/" + commandId, commandPayload)
+
+def.fun: DeleteGlobalCommand(bot:dynamic, appId:string, commandId:string) -> dynamic
+    Give: ApiDelete(bot, "/applications/" + appId + "/commands/" + commandId)
+
+#! Friendly aliases for Python users
+def.fun: Client(token:string) -> dynamic
+    def.var: base
+        dynamic
+        CreateBot("!", IntentsAll())
+    Give: WithToken(base, token)
+
+def.fun: Bot(token:string) -> dynamic
+    Give: UseToken(token)
+
+def.fun: UseToken(token:string) -> dynamic
+    def.var: authed
+        dynamic
+        Client(token)
+    ActiveToken is token
+    ActiveSession is authed
+    Give: authed
+
+def.fun: Session() -> dynamic
+    if ActiveToken == "":
+        flag: "No active Discord token. Call UseToken(token) first."
+    Give: ActiveSession
+
+def.fun: IsSessionReady() -> boolean
+    Give: ActiveToken != ""
+
+def.fun: ClearSession() -> dynamic
+    ActiveToken is ""
+    ActiveSession is {}
+    Give: empty
+
+def.fun: SendWith(tokenOrBot:dynamic, channelId:string, content:string) -> dynamic
+    if typeOf(tokenOrBot) == "string":
+        def.var: authed
+            dynamic
+            Client(tokenOrBot)
+        Give: SendMessage(authed, channelId, content)
+    Give: SendMessage(tokenOrBot, channelId, content)
+
+def.fun: Send(channelId:string, content:string) -> dynamic
+    def.var: bot
+        dynamic
+        Session()
+    Give: SendMessage(bot, channelId, content)
+
+def.fun: SendEmbedWith(tokenOrBot:dynamic, channelId:string, title:string, description:string, color:int) -> dynamic
+    def.var: embed
+        dynamic
+        BuildEmbed(title, description, color)
+    if typeOf(tokenOrBot) == "string":
+        def.var: authed
+            dynamic
+            Client(tokenOrBot)
+        Give: SendEmbedMessage(authed, channelId, embed)
+    Give: SendEmbedMessage(tokenOrBot, channelId, embed)
+
+def.fun: SendEmbed(channelId:string, title:string, description:string, color:int) -> dynamic
+    def.var: embed
+        dynamic
+        BuildEmbed(title, description, color)
+    def.var: bot
+        dynamic
+        Session()
+    Give: SendEmbedMessage(bot, channelId, embed)
+
+def.fun: DMWith(tokenOrBot:dynamic, userId:string, content:string) -> dynamic
+    if typeOf(tokenOrBot) == "string":
+        def.var: authed
+            dynamic
+            Client(tokenOrBot)
+        Give: SendDM(authed, userId, content)
+    Give: SendDM(tokenOrBot, userId, content)
+
+def.fun: DM(userId:string, content:string) -> dynamic
+    def.var: bot
+        dynamic
+        Session()
+    Give: SendDM(bot, userId, content)
+
+def.fun: Verify(token:string) -> dynamic
+    def.var: authed
+        dynamic
+        Client(token)
+    Give: GetMe(authed)
+
+def.fun: FetchChannel(bot:dynamic, channelId:string) -> dynamic
+    Give: GetChannel(bot, channelId)
+
+def.fun: FetchMessage(bot:dynamic, channelId:string, messageId:string) -> dynamic
+    Give: GetMessage(bot, channelId, messageId)
+
+#! =========================
+#! Additional parity helpers
+#! =========================
+
+def.fun: ModifyCurrentUser(bot:dynamic, username:string, avatar:string) -> dynamic
+    Give: ApiPatch(bot, "/users/@me", {"username": username, "avatar": avatar})
+
+def.fun: LeaveGuild(bot:dynamic, guildId:string) -> dynamic
+    Give: ApiDelete(bot, "/users/@me/guilds/" + guildId)
+
+def.fun: CreateGuildRole(bot:dynamic, guildId:string, name:string, permissions:string, color:int, hoist:boolean, mentionable:boolean) -> dynamic
+    def.var: payload
+        dynamic
+        {"name": name, "permissions": permissions, "color": color, "hoist": hoist, "mentionable": mentionable}
+    Give: ApiPost(bot, "/guilds/" + guildId + "/roles", payload)
+
+def.fun: EditGuildRole(bot:dynamic, guildId:string, roleId:string, payload:dynamic) -> dynamic
+    Give: ApiPatch(bot, "/guilds/" + guildId + "/roles/" + roleId, payload)
+
+def.fun: DeleteGuildRole(bot:dynamic, guildId:string, roleId:string) -> dynamic
+    Give: ApiDelete(bot, "/guilds/" + guildId + "/roles/" + roleId)
+
+def.fun: KickMember(bot:dynamic, guildId:string, userId:string) -> dynamic
+    Give: ApiDelete(bot, "/guilds/" + guildId + "/members/" + userId)
+
+def.fun: TimeoutMember(bot:dynamic, guildId:string, userId:string, untilIso:string) -> dynamic
+    Give: ApiPatch(bot, "/guilds/" + guildId + "/members/" + userId, {"communication_disabled_until": untilIso})
+
+def.fun: RemoveTimeout(bot:dynamic, guildId:string, userId:string) -> dynamic
+    Give: ApiPatch(bot, "/guilds/" + guildId + "/members/" + userId, {"communication_disabled_until": Empty})
+
+def.fun: FetchChannelMessages(bot:dynamic, channelId:string) -> dynamic
+    Give: ApiGet(bot, "/channels/" + channelId + "/messages")
+
+def.fun: FetchChannelMessagesBefore(bot:dynamic, channelId:string, beforeMessageId:string, limit:int) -> dynamic
+    Give: ApiGet(bot, "/channels/" + channelId + "/messages?before=" + beforeMessageId + "&limit=" + limit)
+
+def.fun: FetchChannelMessagesAfter(bot:dynamic, channelId:string, afterMessageId:string, limit:int) -> dynamic
+    Give: ApiGet(bot, "/channels/" + channelId + "/messages?after=" + afterMessageId + "&limit=" + limit)
+
+def.fun: FetchChannelMessagesAround(bot:dynamic, channelId:string, aroundMessageId:string, limit:int) -> dynamic
+    Give: ApiGet(bot, "/channels/" + channelId + "/messages?around=" + aroundMessageId + "&limit=" + limit)
+
+def.fun: CrosspostMessage(bot:dynamic, channelId:string, messageId:string) -> dynamic
+    Give: ApiPost(bot, "/channels/" + channelId + "/messages/" + messageId + "/crosspost", {})
+
+def.fun: StartThreadWithoutMessage(bot:dynamic, channelId:string, name:string, autoArchiveMinutes:int, threadType:int) -> dynamic
+    def.var: payload
+        dynamic
+        {"name": name, "auto_archive_duration": autoArchiveMinutes, "type": threadType}
+    Give: ApiPost(bot, "/channels/" + channelId + "/threads", payload)
+
+def.fun: JoinThread(bot:dynamic, threadId:string) -> dynamic
+    Give: ApiPut(bot, "/channels/" + threadId + "/thread-members/@me", {})
+
+def.fun: LeaveThread(bot:dynamic, threadId:string) -> dynamic
+    Give: ApiDelete(bot, "/channels/" + threadId + "/thread-members/@me")
+
+def.fun: AddThreadMember(bot:dynamic, threadId:string, userId:string) -> dynamic
+    Give: ApiPut(bot, "/channels/" + threadId + "/thread-members/" + userId, {})
+
+def.fun: RemoveThreadMember(bot:dynamic, threadId:string, userId:string) -> dynamic
+    Give: ApiDelete(bot, "/channels/" + threadId + "/thread-members/" + userId)
+
+def.fun: FetchThreadMembers(bot:dynamic, threadId:string, withMember:boolean) -> dynamic
+    def.var: raw
+        string
+        "false"
+    if withMember:
+        raw is "true"
+    Give: ApiGet(bot, "/channels/" + threadId + "/thread-members?with_member=" + raw)
+
+def.fun: CreateGuildEmoji(bot:dynamic, guildId:string, name:string, imageDataUri:string, roles:dynamic) -> dynamic
+    Give: ApiPost(bot, "/guilds/" + guildId + "/emojis", {"name": name, "image": imageDataUri, "roles": roles})
+
+def.fun: EditGuildEmoji(bot:dynamic, guildId:string, emojiId:string, name:string, roles:dynamic) -> dynamic
+    Give: ApiPatch(bot, "/guilds/" + guildId + "/emojis/" + emojiId, {"name": name, "roles": roles})
+
+def.fun: DeleteGuildEmoji(bot:dynamic, guildId:string, emojiId:string) -> dynamic
+    Give: ApiDelete(bot, "/guilds/" + guildId + "/emojis/" + emojiId)
+
+def.fun: CreateGuildScheduledEvent(bot:dynamic, guildId:string, payload:dynamic) -> dynamic
+    Give: ApiPost(bot, "/guilds/" + guildId + "/scheduled-events", payload)
+
+def.fun: FetchGuildScheduledEvents(bot:dynamic, guildId:string, withUserCount:boolean) -> dynamic
+    def.var: raw
+        string
+        "false"
+    if withUserCount:
+        raw is "true"
+    Give: ApiGet(bot, "/guilds/" + guildId + "/scheduled-events?with_user_count=" + raw)
+
+def.fun: EditGuildScheduledEvent(bot:dynamic, guildId:string, eventId:string, payload:dynamic) -> dynamic
+    Give: ApiPatch(bot, "/guilds/" + guildId + "/scheduled-events/" + eventId, payload)
+
+def.fun: DeleteGuildScheduledEvent(bot:dynamic, guildId:string, eventId:string) -> dynamic
+    Give: ApiDelete(bot, "/guilds/" + guildId + "/scheduled-events/" + eventId)
+
+def.fun: CreateInvite(bot:dynamic, channelId:string, maxAge:int, maxUses:int, temporary:boolean, unique:boolean) -> dynamic
+    def.var: payload
+        dynamic
+        {"max_age": maxAge, "max_uses": maxUses, "temporary": temporary, "unique": unique}
+    Give: ApiPost(bot, "/channels/" + channelId + "/invites", payload)
+
+def.fun: FetchGuildInvites(bot:dynamic, guildId:string) -> dynamic
+    Give: ApiGet(bot, "/guilds/" + guildId + "/invites")
+
+def.fun: DeleteInvite(bot:dynamic, inviteCode:string) -> dynamic
+    Give: ApiDelete(bot, "/invites/" + inviteCode)
+
+def.fun: RegisterGuildSlashCommand(bot:dynamic, appId:string, guildId:string, name:string, description:string) -> dynamic
+    def.var: payload
+        dynamic
+        {"name": name, "description": description, "type": 1}
+    Give: ApiPost(bot, "/applications/" + appId + "/guilds/" + guildId + "/commands", payload)
+
+def.fun: FetchGuildCommands(bot:dynamic, appId:string, guildId:string) -> dynamic
+    Give: ApiGet(bot, "/applications/" + appId + "/guilds/" + guildId + "/commands")
+
+def.fun: EditGuildCommand(bot:dynamic, appId:string, guildId:string, commandId:string, payload:dynamic) -> dynamic
+    Give: ApiPatch(bot, "/applications/" + appId + "/guilds/" + guildId + "/commands/" + commandId, payload)
+
+def.fun: DeleteGuildCommand(bot:dynamic, appId:string, guildId:string, commandId:string) -> dynamic
+    Give: ApiDelete(bot, "/applications/" + appId + "/guilds/" + guildId + "/commands/" + commandId)
+
+def.fun: BulkOverwriteGlobalCommands(bot:dynamic, appId:string, commands:dynamic) -> dynamic
+    Give: ApiPut(bot, "/applications/" + appId + "/commands", commands)
+
+def.fun: BulkOverwriteGuildCommands(bot:dynamic, appId:string, guildId:string, commands:dynamic) -> dynamic
+    Give: ApiPut(bot, "/applications/" + appId + "/guilds/" + guildId + "/commands", commands)
+
+def.fun: DeferInteraction(bot:dynamic, interactionId:string, interactionToken:string, ephemeral:boolean) -> dynamic
+    def.var: flags
+        int
+        0
+    if ephemeral:
+        flags is 64
+    def.var: payload
+        dynamic
+        {"type": 5, "data": {"flags": flags}}
+    Give: http_post_json(APIBase + "/interactions/" + interactionId + "/" + interactionToken + "/callback", payload, bot["auth"])
+
+def.fun: EditOriginalInteraction(bot:dynamic, appId:string, interactionToken:string, payload:dynamic) -> dynamic
+    Give: ApiPatch(bot, "/webhooks/" + appId + "/" + interactionToken + "/messages/@original", payload)
+
+def.fun: DeleteOriginalInteraction(bot:dynamic, appId:string, interactionToken:string) -> dynamic
+    Give: ApiDelete(bot, "/webhooks/" + appId + "/" + interactionToken + "/messages/@original")
+
+def.fun: EditWebhookMessage(bot:dynamic, webhookId:string, webhookToken:string, messageId:string, payload:dynamic) -> dynamic
+    Give: ApiPatch(bot, "/webhooks/" + webhookId + "/" + webhookToken + "/messages/" + messageId, payload)
+
+def.fun: DeleteWebhookMessage(bot:dynamic, webhookId:string, webhookToken:string, messageId:string) -> dynamic
+    Give: ApiDelete(bot, "/webhooks/" + webhookId + "/" + webhookToken + "/messages/" + messageId)
+
+def.fun: FetchAuditLog(bot:dynamic, guildId:string) -> dynamic
+    Give: ApiGet(bot, "/guilds/" + guildId + "/audit-logs")
+
+def.fun: FetchAuditLogFiltered(bot:dynamic, guildId:string, userId:string, actionType:int, limit:int) -> dynamic
+    Give: ApiGet(bot, "/guilds/" + guildId + "/audit-logs?user_id=" + userId + "&action_type=" + actionType + "&limit=" + limit)
