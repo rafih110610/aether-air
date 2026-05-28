@@ -1,0 +1,43 @@
+#! time.ath
+#! Time module for Aether (Python-like)
+
+def.var: timezone
+    string
+    "UTC"
+
+def.var: daylight
+    boolean
+    false
+
+def.fun: Time() -> float
+    Give: time_now()
+
+def.fun: Sleep(seconds:float) -> dynamic
+    Give: time_sleep(seconds)
+
+def.fun: PerfCounter() -> float
+    Give: time_perf_counter()
+
+def.fun: LocalTime(timestamp:float) -> dynamic
+    def.var: ts
+        float
+        timestamp
+    if ts < 0:
+        ts is time_now()
+    Give: {"timestamp": ts}
+
+def.fun: GmTime(timestamp:float) -> dynamic
+    def.var: ts
+        float
+        timestamp
+    if ts < 0:
+        ts is time_now()
+    Give: {"timestamp": ts}
+
+def.fun: Strftime(format:string, timestamp:float) -> string
+    def.var: ts
+        float
+        timestamp
+    if ts < 0:
+        ts is time_now()
+    Give: format + " @ " + ts
