@@ -5,3 +5,4 @@ sys|./sys.ath|System module with runtime/process metadata and streams
 os|./os.ath|Operating system and filesystem helpers
 random|./random.ath|Pseudo-random number utilities
 time|./time.ath|Time, sleep, and clock helpers
+json|./json.ath|JSON encode/decode and file helpers

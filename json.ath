@@ -1,0 +1,20 @@
+#! json.ath
+#! JSON module for Aether (Python-like)
+
+def.fun: Loads(text:string) -> dynamic
+    Give: json_loads(text)
+
+def.fun: Load(path:string) -> dynamic
+    def.var: text
+        string
+        file_read_text(path)
+    Give: json_loads(text)
+
+def.fun: Dumps(value:dynamic, pretty:boolean) -> string
+    Give: json_dumps(value)
+
+def.fun: Dump(value:dynamic, path:string, pretty:boolean) -> dynamic
+    def.var: text
+        string
+        json_dumps(value)
+    Give: file_write_text(path, text)
