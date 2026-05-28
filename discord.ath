@@ -232,13 +232,13 @@ def.fun: ParseGatewayData(eventPacket:dynamic) -> dynamic
     Give: eventPacket["event"]["d"]
 
 def.fun: IsGatewayDispatch(eventPacket:dynamic) -> boolean
-    Give: ParseGatewayOpcode(eventPacket) == 0
+    Give: discord.ParseGatewayOpcode(eventPacket) == 0
 
 def.fun: IsGatewayHello(eventPacket:dynamic) -> boolean
-    Give: ParseGatewayOpcode(eventPacket) == 10
+    Give: discord.ParseGatewayOpcode(eventPacket) == 10
 
 def.fun: IsGatewayHeartbeatAck(eventPacket:dynamic) -> boolean
-    Give: ParseGatewayOpcode(eventPacket) == 11
+    Give: discord.ParseGatewayOpcode(eventPacket) == 11
 
 def.fun: GatewaySetPresence(socketId:int, status:string, afk:boolean) -> dynamic
     def.var: payload
@@ -290,91 +290,91 @@ def.fun: ApiDelete(bot:dynamic, route:string) -> dynamic
     Give: http_delete(APIBase + route, bot["auth"])
 
 def.fun: FetchUser(bot:dynamic, userId:string) -> dynamic
-    Give: ApiGet(bot, "/users/" + userId)
+    Give: discord.ApiGet(bot, "/users/" + userId)
 
 def.fun: FetchGuilds(bot:dynamic) -> dynamic
-    Give: ApiGet(bot, "/users/@me/guilds")
+    Give: discord.ApiGet(bot, "/users/@me/guilds")
 
 def.fun: FetchGuildChannels(bot:dynamic, guildId:string) -> dynamic
-    Give: ApiGet(bot, "/guilds/" + guildId + "/channels")
+    Give: discord.ApiGet(bot, "/guilds/" + guildId + "/channels")
 
 def.fun: FetchGuildRoles(bot:dynamic, guildId:string) -> dynamic
-    Give: ApiGet(bot, "/guilds/" + guildId + "/roles")
+    Give: discord.ApiGet(bot, "/guilds/" + guildId + "/roles")
 
 def.fun: FetchGuildMember(bot:dynamic, guildId:string, userId:string) -> dynamic
-    Give: ApiGet(bot, "/guilds/" + guildId + "/members/" + userId)
+    Give: discord.ApiGet(bot, "/guilds/" + guildId + "/members/" + userId)
 
 def.fun: EditGuildMemberNick(bot:dynamic, guildId:string, nick:string) -> dynamic
-    Give: ApiPatch(bot, "/guilds/" + guildId + "/members/@me", {"nick": nick})
+    Give: discord.ApiPatch(bot, "/guilds/" + guildId + "/members/@me", {"nick": nick})
 
 def.fun: AddGuildMemberRole(bot:dynamic, guildId:string, userId:string, roleId:string) -> dynamic
-    Give: ApiPut(bot, "/guilds/" + guildId + "/members/" + userId + "/roles/" + roleId, {})
+    Give: discord.ApiPut(bot, "/guilds/" + guildId + "/members/" + userId + "/roles/" + roleId, {})
 
 def.fun: RemoveGuildMemberRole(bot:dynamic, guildId:string, userId:string, roleId:string) -> dynamic
-    Give: ApiDelete(bot, "/guilds/" + guildId + "/members/" + userId + "/roles/" + roleId)
+    Give: discord.ApiDelete(bot, "/guilds/" + guildId + "/members/" + userId + "/roles/" + roleId)
 
 def.fun: BanMember(bot:dynamic, guildId:string, userId:string, deleteMessageSeconds:int) -> dynamic
-    Give: ApiPut(bot, "/guilds/" + guildId + "/bans/" + userId, {"delete_message_seconds": deleteMessageSeconds})
+    Give: discord.ApiPut(bot, "/guilds/" + guildId + "/bans/" + userId, {"delete_message_seconds": deleteMessageSeconds})
 
 def.fun: UnbanMember(bot:dynamic, guildId:string, userId:string) -> dynamic
-    Give: ApiDelete(bot, "/guilds/" + guildId + "/bans/" + userId)
+    Give: discord.ApiDelete(bot, "/guilds/" + guildId + "/bans/" + userId)
 
 def.fun: BulkDeleteMessages(bot:dynamic, channelId:string, messageIds:dynamic) -> dynamic
-    Give: ApiPost(bot, "/channels/" + channelId + "/messages/bulk-delete", {"messages": messageIds})
+    Give: discord.ApiPost(bot, "/channels/" + channelId + "/messages/bulk-delete", {"messages": messageIds})
 
 def.fun: PinMessage(bot:dynamic, channelId:string, messageId:string) -> dynamic
-    Give: ApiPut(bot, "/channels/" + channelId + "/pins/" + messageId, {})
+    Give: discord.ApiPut(bot, "/channels/" + channelId + "/pins/" + messageId, {})
 
 def.fun: UnpinMessage(bot:dynamic, channelId:string, messageId:string) -> dynamic
-    Give: ApiDelete(bot, "/channels/" + channelId + "/pins/" + messageId)
+    Give: discord.ApiDelete(bot, "/channels/" + channelId + "/pins/" + messageId)
 
 def.fun: FetchPinnedMessages(bot:dynamic, channelId:string) -> dynamic
-    Give: ApiGet(bot, "/channels/" + channelId + "/pins")
+    Give: discord.ApiGet(bot, "/channels/" + channelId + "/pins")
 
 def.fun: CreateGuildTextChannel(bot:dynamic, guildId:string, name:string, topic:string) -> dynamic
-    Give: ApiPost(bot, "/guilds/" + guildId + "/channels", {"name": name, "type": 0, "topic": topic})
+    Give: discord.ApiPost(bot, "/guilds/" + guildId + "/channels", {"name": name, "type": 0, "topic": topic})
 
 def.fun: EditChannel(bot:dynamic, channelId:string, payload:dynamic) -> dynamic
-    Give: ApiPatch(bot, "/channels/" + channelId, payload)
+    Give: discord.ApiPatch(bot, "/channels/" + channelId, payload)
 
 def.fun: DeleteChannel(bot:dynamic, channelId:string) -> dynamic
-    Give: ApiDelete(bot, "/channels/" + channelId)
+    Give: discord.ApiDelete(bot, "/channels/" + channelId)
 
 def.fun: CreatePublicThread(bot:dynamic, channelId:string, messageId:string, name:string, autoArchiveMinutes:int) -> dynamic
-    Give: ApiPost(bot, "/channels/" + channelId + "/messages/" + messageId + "/threads", {"name": name, "auto_archive_duration": autoArchiveMinutes})
+    Give: discord.ApiPost(bot, "/channels/" + channelId + "/messages/" + messageId + "/threads", {"name": name, "auto_archive_duration": autoArchiveMinutes})
 
 def.fun: CreateWebhook(bot:dynamic, channelId:string, name:string) -> dynamic
-    Give: ApiPost(bot, "/channels/" + channelId + "/webhooks", {"name": name})
+    Give: discord.ApiPost(bot, "/channels/" + channelId + "/webhooks", {"name": name})
 
 def.fun: FetchApplication(bot:dynamic) -> dynamic
-    Give: ApiGet(bot, "/oauth2/applications/@me")
+    Give: discord.ApiGet(bot, "/oauth2/applications/@me")
 
 def.fun: FetchGlobalCommands(bot:dynamic, appId:string) -> dynamic
-    Give: ApiGet(bot, "/applications/" + appId + "/commands")
+    Give: discord.ApiGet(bot, "/applications/" + appId + "/commands")
 
 def.fun: CreateGlobalCommand(bot:dynamic, appId:string, commandPayload:dynamic) -> dynamic
-    Give: ApiPost(bot, "/applications/" + appId + "/commands", commandPayload)
+    Give: discord.ApiPost(bot, "/applications/" + appId + "/commands", commandPayload)
 
 def.fun: EditGlobalCommand(bot:dynamic, appId:string, commandId:string, commandPayload:dynamic) -> dynamic
-    Give: ApiPatch(bot, "/applications/" + appId + "/commands/" + commandId, commandPayload)
+    Give: discord.ApiPatch(bot, "/applications/" + appId + "/commands/" + commandId, commandPayload)
 
 def.fun: DeleteGlobalCommand(bot:dynamic, appId:string, commandId:string) -> dynamic
-    Give: ApiDelete(bot, "/applications/" + appId + "/commands/" + commandId)
+    Give: discord.ApiDelete(bot, "/applications/" + appId + "/commands/" + commandId)
 
 #! Friendly aliases for Python users
 def.fun: Client(token:string) -> dynamic
     def.var: base
         dynamic
         CreateBot("!", IntentsAll())
-    Give: WithToken(base, token)
+    Give: discord.WithToken(base, token)
 
 def.fun: Bot(token:string) -> dynamic
-    Give: UseToken(token)
+    Give: discord.UseToken(token)
 
 def.fun: UseToken(token:string) -> dynamic
     def.var: authed
         dynamic
-        Client(token)
+        discord.Client(token)
     ActiveToken is token
     ActiveSession is authed
     Give: authed
@@ -396,61 +396,61 @@ def.fun: SendWith(tokenOrBot:dynamic, channelId:string, content:string) -> dynam
     if typeOf(tokenOrBot) == "string":
         def.var: authed
             dynamic
-            Client(tokenOrBot)
-        Give: SendMessage(authed, channelId, content)
-    Give: SendMessage(tokenOrBot, channelId, content)
+            discord.Client(tokenOrBot)
+        Give: discord.SendMessage(authed, channelId, content)
+    Give: discord.SendMessage(tokenOrBot, channelId, content)
 
 def.fun: Send(channelId:string, content:string) -> dynamic
     def.var: bot
         dynamic
-        Session()
-    Give: SendMessage(bot, channelId, content)
+        discord.Session()
+    Give: discord.SendMessage(bot, channelId, content)
 
 def.fun: SendEmbedWith(tokenOrBot:dynamic, channelId:string, title:string, description:string, color:int) -> dynamic
     def.var: embed
         dynamic
-        BuildEmbed(title, description, color)
+        discord.BuildEmbed(title, description, color)
     if typeOf(tokenOrBot) == "string":
         def.var: authed
             dynamic
-            Client(tokenOrBot)
-        Give: SendEmbedMessage(authed, channelId, embed)
-    Give: SendEmbedMessage(tokenOrBot, channelId, embed)
+            discord.Client(tokenOrBot)
+        Give: discord.SendEmbedMessage(authed, channelId, embed)
+    Give: discord.SendEmbedMessage(tokenOrBot, channelId, embed)
 
 def.fun: SendEmbed(channelId:string, title:string, description:string, color:int) -> dynamic
     def.var: embed
         dynamic
-        BuildEmbed(title, description, color)
+        discord.BuildEmbed(title, description, color)
     def.var: bot
         dynamic
-        Session()
-    Give: SendEmbedMessage(bot, channelId, embed)
+        discord.Session()
+    Give: discord.SendEmbedMessage(bot, channelId, embed)
 
 def.fun: DMWith(tokenOrBot:dynamic, userId:string, content:string) -> dynamic
     if typeOf(tokenOrBot) == "string":
         def.var: authed
             dynamic
-            Client(tokenOrBot)
-        Give: SendDM(authed, userId, content)
-    Give: SendDM(tokenOrBot, userId, content)
+            discord.Client(tokenOrBot)
+        Give: discord.SendDM(authed, userId, content)
+    Give: discord.SendDM(tokenOrBot, userId, content)
 
 def.fun: DM(userId:string, content:string) -> dynamic
     def.var: bot
         dynamic
-        Session()
-    Give: SendDM(bot, userId, content)
+        discord.Session()
+    Give: discord.SendDM(bot, userId, content)
 
 def.fun: Verify(token:string) -> dynamic
     def.var: authed
         dynamic
-        Client(token)
-    Give: GetMe(authed)
+        discord.Client(token)
+    Give: discord.GetMe(authed)
 
 def.fun: FetchChannel(bot:dynamic, channelId:string) -> dynamic
-    Give: GetChannel(bot, channelId)
+    Give: discord.GetChannel(bot, channelId)
 
 def.fun: FetchMessage(bot:dynamic, channelId:string, messageId:string) -> dynamic
-    Give: GetMessage(bot, channelId, messageId)
+    Give: discord.GetMessage(bot, channelId, messageId)
 
 #! =========================
 #! Additional parity helpers
