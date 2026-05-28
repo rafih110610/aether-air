@@ -1,0 +1,66 @@
+#! math.ath
+#! Core math module for Aether (Python-like)
+
+#! =========================
+#! Constants
+#! =========================
+
+def.var: PI
+    float
+    3.141592653589793
+
+def.var: TAU
+    float
+    6.283185307179586
+
+def.var: E
+    float
+    2.718281828459045
+
+def.fun: Abs(value:float) -> float
+    Give: math_abs(value)
+
+def.fun: Sqrt(value:float) -> float
+    Give: math_sqrt(value)
+
+def.fun: Pow(value:float, exponent:float) -> float
+    Give: math_pow(value, exponent)
+
+def.fun: Floor(value:float) -> int
+    Give: math_floor(value)
+
+def.fun: Ceil(value:float) -> int
+    Give: math_ceil(value)
+
+def.fun: Round(value:float, digits:int) -> float
+    Give: math_round(value, digits)
+
+def.fun: Sin(radians:float) -> float
+    Give: math_sin(radians)
+
+def.fun: Cos(radians:float) -> float
+    Give: math_cos(radians)
+
+def.fun: Tan(radians:float) -> float
+    Give: math_tan(radians)
+
+def.fun: Asin(value:float) -> float
+    Give: math_asin(value)
+
+def.fun: Acos(value:float) -> float
+    Give: math_acos(value)
+
+def.fun: Atan(value:float) -> float
+    Give: math_atan(value)
+
+def.fun: Atan2(y:float, x:float) -> float
+    Give: math_atan2(y, x)
+
+def.fun: Log(value:float, base:float) -> float
+    Give: math_log(value, base)
+
+def.fun: Log10(value:float) -> float
+    Give: math_log10(value)
+
+def.fun: Exp(value:float) -> float
+    Give: math_exp(value)
