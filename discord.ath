@@ -1,5 +1,5 @@
 #! discord.ath
-#! Discord.py-inspired starter module for Aether.
+#! Native Discord starter module for Aether.
 
 def.var: APIBase
     string
@@ -44,37 +44,75 @@ def.fun: Login(token:string) -> dynamic
         "Bot " + token
     def.var: me
         dynamic
-        http_get(APIBase + "/users/@me", auth)
+        http_get;
+            APIBase + "/users/@me"
+            auth
     Give: {"token": token, "auth": auth, "session": me}
 
 def.fun: GatewayInfo(bot:dynamic) -> dynamic
-    Give: http_get(APIBase + "/gateway/bot", bot["auth"])
+    def.var: result
+        dynamic
+        http_get;
+            APIBase + "/gateway/bot"
+            bot["auth"]
+    Give: result
 
 def.fun: GatewayOpen(url:string) -> dynamic
-    Give: ws_connect(url + "?v=10&encoding=json")
+    def.var: opened
+        dynamic
+        ws_connect;
+            url + "?v=10&encoding=json"
+    Give: opened
 
 def.fun: GatewayIdentify(socketId:int, token:string, intents:int) -> dynamic
     def.var: identify
         dynamic
         {"op": 2, "d": {"token": token, "intents": intents, "properties": {"os": "aether", "browser": "aether", "device": "aether"}}}
-    Give: ws_send_text(socketId, json_dumps(identify))
+    def.var: identifyText
+        string
+        json_dumps;
+            identify
+    def.var: sendResult
+        dynamic
+        ws_send_text;
+            socketId
+            identifyText
+    Give: sendResult
 
 def.fun: GatewayHeartbeat(socketId:int, seq:int) -> dynamic
     def.var: heartbeat
         dynamic
         {"op": 1, "d": seq}
-    Give: ws_send_text(socketId, json_dumps(heartbeat))
+    def.var: heartbeatText
+        string
+        json_dumps;
+            heartbeat
+    def.var: sendResult
+        dynamic
+        ws_send_text;
+            socketId
+            heartbeatText
+    Give: sendResult
 
 def.fun: GatewayRecv(socketId:int) -> dynamic
     def.var: packet
         dynamic
-        ws_recv_text(socketId)
+        ws_recv_text;
+            socketId
     if packet["ok"]:
-        Give: {"ok": TRUE, "socket_id": socketId, "raw": packet["text"], "event": json_loads(packet["text"])}
+        def.var: parsedEvent
+            dynamic
+            json_loads;
+                packet["text"]
+        Give: {"ok": TRUE, "socket_id": socketId, "raw": packet["text"], "event": parsedEvent}
     Give: packet
 
 def.fun: GatewayClose(socketId:int) -> dynamic
-    Give: ws_close(socketId)
+    def.var: result
+        dynamic
+        ws_close;
+            socketId
+    Give: result
 
 def.fun: IsSuccess(result:dynamic) -> boolean
     Give: result["ok"]
@@ -101,13 +139,25 @@ def.fun: SendMessage(bot:dynamic, channelId:string, content:string) -> dynamic
     def.var: payload
         dynamic
         {"content": content}
-    Give: http_post_json(route, payload, bot["auth"])
+    def.var: result
+        dynamic
+        http_post_json;
+            route
+            payload
+            bot["auth"]
+    Give: result
 
 def.fun: SendRichMessage(bot:dynamic, channelId:string, payload:dynamic) -> dynamic
     def.var: route
         string
         APIBase + "/channels/" + channelId + "/messages"
-    Give: http_post_json(route, payload, bot["auth"])
+    def.var: result
+        dynamic
+        http_post_json;
+            route
+            payload
+            bot["auth"]
+    Give: result
 
 def.fun: SendEmbedMessage(bot:dynamic, channelId:string, embed:dynamic) -> dynamic
     def.var: route
@@ -116,7 +166,13 @@ def.fun: SendEmbedMessage(bot:dynamic, channelId:string, embed:dynamic) -> dynam
     def.var: payload
         dynamic
         {"embeds": [embed]}
-    Give: http_post_json(route, payload, bot["auth"])
+    def.var: result
+        dynamic
+        http_post_json;
+            route
+            payload
+            bot["auth"]
+    Give: result
 
 def.fun: EditMessage(bot:dynamic, channelId:string, messageId:string, content:string) -> dynamic
     def.var: route
@@ -125,56 +181,119 @@ def.fun: EditMessage(bot:dynamic, channelId:string, messageId:string, content:st
     def.var: payload
         dynamic
         {"content": content}
-    Give: http_patch_json(route, payload, bot["auth"])
+    def.var: result
+        dynamic
+        http_patch_json;
+            route
+            payload
+            bot["auth"]
+    Give: result
 
 def.fun: DeleteMessage(bot:dynamic, channelId:string, messageId:string) -> dynamic
     def.var: route
         string
         APIBase + "/channels/" + channelId + "/messages/" + messageId
-    Give: http_delete(route, bot["auth"])
+    def.var: result
+        dynamic
+        http_delete;
+            route
+            bot["auth"]
+    Give: result
 
 def.fun: TriggerTyping(bot:dynamic, channelId:string) -> dynamic
     def.var: route
         string
         APIBase + "/channels/" + channelId + "/typing"
-    Give: http_post_json(route, {}, bot["auth"])
+    def.var: result
+        dynamic
+        http_post_json;
+            route
+            {}
+            bot["auth"]
+    Give: result
 
 def.fun: AddReaction(bot:dynamic, channelId:string, messageId:string, emoji:string) -> dynamic
     def.var: route
         string
         APIBase + "/channels/" + channelId + "/messages/" + messageId + "/reactions/" + emoji + "/@me"
-    Give: http_put_json(route, {}, bot["auth"])
+    def.var: result
+        dynamic
+        http_put_json;
+            route
+            {}
+            bot["auth"]
+    Give: result
 
 def.fun: RemoveOwnReaction(bot:dynamic, channelId:string, messageId:string, emoji:string) -> dynamic
     def.var: route
         string
         APIBase + "/channels/" + channelId + "/messages/" + messageId + "/reactions/" + emoji + "/@me"
-    Give: http_delete(route, bot["auth"])
+    def.var: result
+        dynamic
+        http_delete;
+            route
+            bot["auth"]
+    Give: result
 
 def.fun: GetMe(bot:dynamic) -> dynamic
-    Give: http_get(APIBase + "/users/@me", bot["auth"])
+    def.var: result
+        dynamic
+        http_get;
+            APIBase + "/users/@me"
+            bot["auth"]
+    Give: result
 
 def.fun: GetGuild(bot:dynamic, guildId:string) -> dynamic
-    Give: http_get(APIBase + "/guilds/" + guildId, bot["auth"])
+    def.var: result
+        dynamic
+        http_get;
+            APIBase + "/guilds/" + guildId
+            bot["auth"]
+    Give: result
 
 def.fun: GetChannel(bot:dynamic, channelId:string) -> dynamic
-    Give: http_get(APIBase + "/channels/" + channelId, bot["auth"])
+    def.var: result
+        dynamic
+        http_get;
+            APIBase + "/channels/" + channelId
+            bot["auth"]
+    Give: result
 
 def.fun: GetMessage(bot:dynamic, channelId:string, messageId:string) -> dynamic
-    Give: http_get(APIBase + "/channels/" + channelId + "/messages/" + messageId, bot["auth"])
+    def.var: result
+        dynamic
+        http_get;
+            APIBase + "/channels/" + channelId + "/messages/" + messageId
+            bot["auth"]
+    Give: result
 
 def.fun: CreateDM(bot:dynamic, userId:string) -> dynamic
-    Give: http_post_json(APIBase + "/users/@me/channels", {"recipient_id": userId}, bot["auth"])
+    def.var: result
+        dynamic
+        http_post_json;
+            APIBase + "/users/@me/channels"
+            {"recipient_id": userId}
+            bot["auth"]
+    Give: result
 
 def.fun: SendDM(bot:dynamic, userId:string, content:string) -> dynamic
     def.var: dm
         dynamic
-        CreateDM(bot, userId)
+        CreateDM;
+            bot
+            userId
     if dm["ok"]:
         def.var: dmChannel
             dynamic
-            json_loads(dm["body"])
-        Give: SendMessage(bot, dmChannel["id"], content)
+            json_loads;
+                dm["body"]
+        def.var: sent
+            dynamic
+            SendMessage;
+                bot
+                dmChannel["id"]
+                content
+        Give: sent
     Give: dm
 
 def.fun: RegisterGlobalSlashCommand(bot:dynamic, appId:string, name:string, description:string) -> dynamic
@@ -184,7 +303,13 @@ def.fun: RegisterGlobalSlashCommand(bot:dynamic, appId:string, name:string, desc
     def.var: payload
         dynamic
         {"name": name, "description": description, "type": 1}
-    Give: http_post_json(route, payload, bot["auth"])
+    def.var: result
+        dynamic
+        http_post_json;
+            route
+            payload
+            bot["auth"]
+    Give: result
 
 def.fun: ReplyInteraction(bot:dynamic, interactionId:string, interactionToken:string, content:string) -> dynamic
     def.var: route
@@ -193,7 +318,13 @@ def.fun: ReplyInteraction(bot:dynamic, interactionId:string, interactionToken:st
     def.var: payload
         dynamic
         {"type": 4, "data": {"content": content}}
-    Give: http_post_json(route, payload, bot["auth"])
+    def.var: result
+        dynamic
+        http_post_json;
+            route
+            payload
+            bot["auth"]
+    Give: result
 
 def.fun: FollowupInteraction(bot:dynamic, appId:string, interactionToken:string, content:string) -> dynamic
     def.var: route
@@ -202,7 +333,13 @@ def.fun: FollowupInteraction(bot:dynamic, appId:string, interactionToken:string,
     def.var: payload
         dynamic
         {"content": content}
-    Give: http_post_json(route, payload, bot["auth"])
+    def.var: result
+        dynamic
+        http_post_json;
+            route
+            payload
+            bot["auth"]
+    Give: result
 
 def.fun: BuildEmbed(title:string, description:string, color:int) -> dynamic
     Give: {"title": title, "description": description, "color": color}
@@ -212,11 +349,11 @@ def.fun: BuildAllowedMentions(parseEveryone:boolean, parseRoles:boolean, parseUs
         dynamic
         []
     if parseEveryone:
-        make: parse = ["everyone"]
+        parse is ["everyone"]
     if parseRoles:
-        make: parse = parse + ["roles"]
+        parse is parse + ["roles"]
     if parseUsers:
-        make: parse = parse + ["users"]
+        parse is parse + ["users"]
     Give: {"parse": parse}
 
 def.fun: ParseGatewayOpcode(eventPacket:dynamic) -> int
@@ -232,28 +369,64 @@ def.fun: ParseGatewayData(eventPacket:dynamic) -> dynamic
     Give: eventPacket["event"]["d"]
 
 def.fun: IsGatewayDispatch(eventPacket:dynamic) -> boolean
-    Give: discord.ParseGatewayOpcode(eventPacket) == 0
+    def.var: opcode
+        int
+        discord.ParseGatewayOpcode;
+            eventPacket
+    Give: opcode == 0
 
 def.fun: IsGatewayHello(eventPacket:dynamic) -> boolean
-    Give: discord.ParseGatewayOpcode(eventPacket) == 10
+    def.var: opcode
+        int
+        discord.ParseGatewayOpcode;
+            eventPacket
+    Give: opcode == 10
 
 def.fun: IsGatewayHeartbeatAck(eventPacket:dynamic) -> boolean
-    Give: discord.ParseGatewayOpcode(eventPacket) == 11
+    def.var: opcode
+        int
+        discord.ParseGatewayOpcode;
+            eventPacket
+    Give: opcode == 11
 
 def.fun: GatewaySetPresence(socketId:int, status:string, afk:boolean) -> dynamic
     def.var: payload
         dynamic
         {"op": 3, "d": {"since": 0, "activities": [], "status": status, "afk": afk}}
-    Give: ws_send_text(socketId, json_dumps(payload))
+    def.var: payloadText
+        string
+        json_dumps;
+            payload
+    def.var: result
+        dynamic
+        ws_send_text;
+            socketId
+            payloadText
+    Give: result
 
 def.fun: GatewayRequestGuildMembers(socketId:int, guildId:string, query:string, limit:int) -> dynamic
     def.var: payload
         dynamic
         {"op": 8, "d": {"guild_id": guildId, "query": query, "limit": limit}}
-    Give: ws_send_text(socketId, json_dumps(payload))
+    def.var: payloadText
+        string
+        json_dumps;
+            payload
+    def.var: result
+        dynamic
+        ws_send_text;
+            socketId
+            payloadText
+    Give: result
 
 def.fun: SendWebhook(webhookUrl:string, content:string) -> dynamic
-    Give: http_post_json(webhookUrl, {"content": content}, "")
+    def.var: result
+        dynamic
+        http_post_json;
+            webhookUrl
+            {"content": content}
+            ""
+    Give: result
 
 def.fun: Mention(userId:string) -> string
     Give: "<@" + userId + ">"
@@ -271,97 +444,256 @@ def.fun: ReadyPayload(botName:string) -> dynamic
     Give: {"status": "ready", "bot": botName, "gateway": GatewayBase}
 
 #! =========================
-#! Extended Discord.py-like REST Surface
+#! Extended Discord REST Surface
 #! =========================
 
 def.fun: ApiGet(bot:dynamic, route:string) -> dynamic
-    Give: http_get(APIBase + route, bot["auth"])
+    def.var: result
+        dynamic
+        http_get;
+            APIBase + route
+            bot["auth"]
+    Give: result
 
 def.fun: ApiPost(bot:dynamic, route:string, payload:dynamic) -> dynamic
-    Give: http_post_json(APIBase + route, payload, bot["auth"])
+    def.var: result
+        dynamic
+        http_post_json;
+            APIBase + route
+            payload
+            bot["auth"]
+    Give: result
 
 def.fun: ApiPut(bot:dynamic, route:string, payload:dynamic) -> dynamic
-    Give: http_put_json(APIBase + route, payload, bot["auth"])
+    def.var: result
+        dynamic
+        http_put_json;
+            APIBase + route
+            payload
+            bot["auth"]
+    Give: result
 
 def.fun: ApiPatch(bot:dynamic, route:string, payload:dynamic) -> dynamic
-    Give: http_patch_json(APIBase + route, payload, bot["auth"])
+    def.var: result
+        dynamic
+        http_patch_json;
+            APIBase + route
+            payload
+            bot["auth"]
+    Give: result
 
 def.fun: ApiDelete(bot:dynamic, route:string) -> dynamic
-    Give: http_delete(APIBase + route, bot["auth"])
+    def.var: result
+        dynamic
+        http_delete;
+            APIBase + route
+            bot["auth"]
+    Give: result
 
 def.fun: FetchUser(bot:dynamic, userId:string) -> dynamic
-    Give: discord.ApiGet(bot, "/users/" + userId)
+    def.var: result
+        dynamic
+        discord.ApiGet;
+            bot
+            "/users/" + userId
+    Give: result
 
 def.fun: FetchGuilds(bot:dynamic) -> dynamic
-    Give: discord.ApiGet(bot, "/users/@me/guilds")
+    def.var: result
+        dynamic
+        discord.ApiGet;
+            bot
+            "/users/@me/guilds"
+    Give: result
 
 def.fun: FetchGuildChannels(bot:dynamic, guildId:string) -> dynamic
-    Give: discord.ApiGet(bot, "/guilds/" + guildId + "/channels")
+    def.var: result
+        dynamic
+        discord.ApiGet;
+            bot
+            "/guilds/" + guildId + "/channels"
+    Give: result
 
 def.fun: FetchGuildRoles(bot:dynamic, guildId:string) -> dynamic
-    Give: discord.ApiGet(bot, "/guilds/" + guildId + "/roles")
+    def.var: result
+        dynamic
+        discord.ApiGet;
+            bot
+            "/guilds/" + guildId + "/roles"
+    Give: result
 
 def.fun: FetchGuildMember(bot:dynamic, guildId:string, userId:string) -> dynamic
-    Give: discord.ApiGet(bot, "/guilds/" + guildId + "/members/" + userId)
+    def.var: result
+        dynamic
+        discord.ApiGet;
+            bot
+            "/guilds/" + guildId + "/members/" + userId
+    Give: result
 
 def.fun: EditGuildMemberNick(bot:dynamic, guildId:string, nick:string) -> dynamic
-    Give: discord.ApiPatch(bot, "/guilds/" + guildId + "/members/@me", {"nick": nick})
+    def.var: result
+        dynamic
+        discord.ApiPatch;
+            bot
+            "/guilds/" + guildId + "/members/@me"
+            {"nick": nick}
+    Give: result
 
 def.fun: AddGuildMemberRole(bot:dynamic, guildId:string, userId:string, roleId:string) -> dynamic
-    Give: discord.ApiPut(bot, "/guilds/" + guildId + "/members/" + userId + "/roles/" + roleId, {})
+    def.var: result
+        dynamic
+        discord.ApiPut;
+            bot
+            "/guilds/" + guildId + "/members/" + userId + "/roles/" + roleId
+            {}
+    Give: result
 
 def.fun: RemoveGuildMemberRole(bot:dynamic, guildId:string, userId:string, roleId:string) -> dynamic
-    Give: discord.ApiDelete(bot, "/guilds/" + guildId + "/members/" + userId + "/roles/" + roleId)
+    def.var: result
+        dynamic
+        discord.ApiDelete;
+            bot
+            "/guilds/" + guildId + "/members/" + userId + "/roles/" + roleId
+    Give: result
 
 def.fun: BanMember(bot:dynamic, guildId:string, userId:string, deleteMessageSeconds:int) -> dynamic
-    Give: discord.ApiPut(bot, "/guilds/" + guildId + "/bans/" + userId, {"delete_message_seconds": deleteMessageSeconds})
+    def.var: result
+        dynamic
+        discord.ApiPut;
+            bot
+            "/guilds/" + guildId + "/bans/" + userId
+            {"delete_message_seconds": deleteMessageSeconds}
+    Give: result
 
 def.fun: UnbanMember(bot:dynamic, guildId:string, userId:string) -> dynamic
-    Give: discord.ApiDelete(bot, "/guilds/" + guildId + "/bans/" + userId)
+    def.var: result
+        dynamic
+        discord.ApiDelete;
+            bot
+            "/guilds/" + guildId + "/bans/" + userId
+    Give: result
 
 def.fun: BulkDeleteMessages(bot:dynamic, channelId:string, messageIds:dynamic) -> dynamic
-    Give: discord.ApiPost(bot, "/channels/" + channelId + "/messages/bulk-delete", {"messages": messageIds})
+    def.var: result
+        dynamic
+        discord.ApiPost;
+            bot
+            "/channels/" + channelId + "/messages/bulk-delete"
+            {"messages": messageIds}
+    Give: result
 
 def.fun: PinMessage(bot:dynamic, channelId:string, messageId:string) -> dynamic
-    Give: discord.ApiPut(bot, "/channels/" + channelId + "/pins/" + messageId, {})
+    def.var: result
+        dynamic
+        discord.ApiPut;
+            bot
+            "/channels/" + channelId + "/pins/" + messageId
+            {}
+    Give: result
 
 def.fun: UnpinMessage(bot:dynamic, channelId:string, messageId:string) -> dynamic
-    Give: discord.ApiDelete(bot, "/channels/" + channelId + "/pins/" + messageId)
+    def.var: result
+        dynamic
+        discord.ApiDelete;
+            bot
+            "/channels/" + channelId + "/pins/" + messageId
+    Give: result
 
 def.fun: FetchPinnedMessages(bot:dynamic, channelId:string) -> dynamic
-    Give: discord.ApiGet(bot, "/channels/" + channelId + "/pins")
+    def.var: result
+        dynamic
+        discord.ApiGet;
+            bot
+            "/channels/" + channelId + "/pins"
+    Give: result
 
 def.fun: CreateGuildTextChannel(bot:dynamic, guildId:string, name:string, topic:string) -> dynamic
-    Give: discord.ApiPost(bot, "/guilds/" + guildId + "/channels", {"name": name, "type": 0, "topic": topic})
+    def.var: result
+        dynamic
+        discord.ApiPost;
+            bot
+            "/guilds/" + guildId + "/channels"
+            {"name": name, "type": 0, "topic": topic}
+    Give: result
 
 def.fun: EditChannel(bot:dynamic, channelId:string, payload:dynamic) -> dynamic
-    Give: discord.ApiPatch(bot, "/channels/" + channelId, payload)
+    def.var: result
+        dynamic
+        discord.ApiPatch;
+            bot
+            "/channels/" + channelId
+            payload
+    Give: result
 
 def.fun: DeleteChannel(bot:dynamic, channelId:string) -> dynamic
-    Give: discord.ApiDelete(bot, "/channels/" + channelId)
+    def.var: result
+        dynamic
+        discord.ApiDelete;
+            bot
+            "/channels/" + channelId
+    Give: result
 
 def.fun: CreatePublicThread(bot:dynamic, channelId:string, messageId:string, name:string, autoArchiveMinutes:int) -> dynamic
-    Give: discord.ApiPost(bot, "/channels/" + channelId + "/messages/" + messageId + "/threads", {"name": name, "auto_archive_duration": autoArchiveMinutes})
+    def.var: result
+        dynamic
+        discord.ApiPost;
+            bot
+            "/channels/" + channelId + "/messages/" + messageId + "/threads"
+            {"name": name, "auto_archive_duration": autoArchiveMinutes}
+    Give: result
 
 def.fun: CreateWebhook(bot:dynamic, channelId:string, name:string) -> dynamic
-    Give: discord.ApiPost(bot, "/channels/" + channelId + "/webhooks", {"name": name})
+    def.var: result
+        dynamic
+        discord.ApiPost;
+            bot
+            "/channels/" + channelId + "/webhooks"
+            {"name": name}
+    Give: result
 
 def.fun: FetchApplication(bot:dynamic) -> dynamic
-    Give: discord.ApiGet(bot, "/oauth2/applications/@me")
+    def.var: result
+        dynamic
+        discord.ApiGet;
+            bot
+            "/oauth2/applications/@me"
+    Give: result
 
 def.fun: FetchGlobalCommands(bot:dynamic, appId:string) -> dynamic
-    Give: discord.ApiGet(bot, "/applications/" + appId + "/commands")
+    def.var: result
+        dynamic
+        discord.ApiGet;
+            bot
+            "/applications/" + appId + "/commands"
+    Give: result
 
 def.fun: CreateGlobalCommand(bot:dynamic, appId:string, commandPayload:dynamic) -> dynamic
-    Give: discord.ApiPost(bot, "/applications/" + appId + "/commands", commandPayload)
+    def.var: result
+        dynamic
+        discord.ApiPost;
+            bot
+            "/applications/" + appId + "/commands"
+            commandPayload
+    Give: result
 
 def.fun: EditGlobalCommand(bot:dynamic, appId:string, commandId:string, commandPayload:dynamic) -> dynamic
-    Give: discord.ApiPatch(bot, "/applications/" + appId + "/commands/" + commandId, commandPayload)
+    def.var: result
+        dynamic
+        discord.ApiPatch;
+            bot
+            "/applications/" + appId + "/commands/" + commandId
+            commandPayload
+    Give: result
 
 def.fun: DeleteGlobalCommand(bot:dynamic, appId:string, commandId:string) -> dynamic
-    Give: discord.ApiDelete(bot, "/applications/" + appId + "/commands/" + commandId)
+    def.var: result
+        dynamic
+        discord.ApiDelete;
+            bot
+            "/applications/" + appId + "/commands/" + commandId
+    Give: result
 
-#! Friendly aliases for Python users
+#! Friendly compatibility aliases
 def.fun: Client(token:string) -> dynamic
     def.var: auth
         string
@@ -384,21 +716,25 @@ def.fun: UseToken(token:string) -> dynamic
 
 def.fun: RunActive() -> dynamic
     if ActiveToken == "":
-        flag: "No active Discord token. Call UseToken(token) first."
+        flag: "No active Discord token. Call UseToken with token first."
 
     def.var: info
         dynamic
-        http_get("https://discord.com/api/v10" + "/gateway/bot", ActiveSession["auth"])
+        http_get;
+            "https://discord.com/api/v10" + "/gateway/bot"
+            ActiveSession["auth"]
     if not info["ok"]:
         Give: info
 
     def.var: details
         dynamic
-        json_loads(info["body"])
+        json_loads;
+            info["body"]
 
     def.var: opened
         dynamic
-        ws_connect(details["url"] + "?v=10&encoding=json")
+        ws_connect;
+            details["url"] + "?v=10&encoding=json"
     if not opened["ok"]:
         Give: opened
 
@@ -409,18 +745,29 @@ def.fun: RunActive() -> dynamic
     def.var: identify
         dynamic
         {"op": 2, "d": {"token": ActiveSession["token"], "intents": ActiveSession["intents"], "properties": {"os": "aether", "browser": "aether", "device": "aether"}}}
-    ws_send_text(sid, json_dumps(identify))
+    def.var: identifyText
+        string
+        json_dumps;
+            identify
+    ws_send_text;
+        sid
+        identifyText
 
     def.var: intervalSeconds
         float
         30
     def.var: hello
         dynamic
-        ws_recv_text(sid)
+        ws_recv_text;
+            sid
     if hello["ok"]:
+        def.var: helloEvent
+            dynamic
+            json_loads;
+                hello["text"]
         def.var: helloPacket
             dynamic
-            {"ok": TRUE, "socket_id": sid, "raw": hello["text"], "event": json_loads(hello["text"])}
+            {"ok": TRUE, "socket_id": sid, "raw": hello["text"], "event": helloEvent}
         if helloPacket["event"]["op"] == 10:
             def.var: helloData
                 dynamic
@@ -428,15 +775,22 @@ def.fun: RunActive() -> dynamic
             def.var: heartbeatInterval
                 float
                 helloData["heartbeat_interval"]
-            make: intervalSeconds = heartbeatInterval / 1000
+            intervalSeconds is heartbeatInterval / 1000
 
     Repeat:
-        ws_send_text(sid, json_dumps({"op": 1, "d": 0}))
-        time_sleep(intervalSeconds)
+        def.var: heartbeatText
+            string
+            json_dumps;
+                {"op": 1, "d": 0}
+        ws_send_text;
+            sid
+            heartbeatText
+        time_sleep;
+            intervalSeconds
 
 def.fun: Session() -> dynamic
     if ActiveToken == "":
-        flag: "No active Discord token. Call UseToken(token) first."
+        flag: "No active Discord token. Call UseToken with token first."
     Give: ActiveSession
 
 def.fun: IsSessionReady() -> boolean
@@ -448,118 +802,303 @@ def.fun: ClearSession() -> dynamic
     Give: empty
 
 def.fun: SendWith(tokenOrBot:dynamic, channelId:string, content:string) -> dynamic
-    if typeOf(tokenOrBot) == "string":
-        Give: http_post_json("https://discord.com/api/v10" + "/channels/" + channelId + "/messages", {"content": content}, "Bot " + tokenOrBot)
-    Give: http_post_json("https://discord.com/api/v10" + "/channels/" + channelId + "/messages", {"content": content}, tokenOrBot["auth"])
+    def.var: tokenType
+        string
+        typeOf;
+            tokenOrBot
+    if tokenType == "string":
+        def.var: result
+            dynamic
+            http_post_json;
+                "https://discord.com/api/v10" + "/channels/" + channelId + "/messages"
+                {"content": content}
+                "Bot " + tokenOrBot
+        Give: result
+    def.var: result
+        dynamic
+        http_post_json;
+            "https://discord.com/api/v10" + "/channels/" + channelId + "/messages"
+            {"content": content}
+            tokenOrBot["auth"]
+    Give: result
 
 def.fun: Send(channelId:string, content:string) -> dynamic
     if ActiveToken == "":
-        flag: "No active Discord token. Call UseToken(token) first."
-    Give: http_post_json("https://discord.com/api/v10" + "/channels/" + channelId + "/messages", {"content": content}, ActiveSession["auth"])
+        flag: "No active Discord token. Call UseToken with token first."
+    def.var: result
+        dynamic
+        http_post_json;
+            "https://discord.com/api/v10" + "/channels/" + channelId + "/messages"
+            {"content": content}
+            ActiveSession["auth"]
+    Give: result
 
 def.fun: SendEmbedWith(tokenOrBot:dynamic, channelId:string, title:string, description:string, color:int) -> dynamic
     def.var: embed
         dynamic
         {"title": title, "description": description, "color": color}
-    if typeOf(tokenOrBot) == "string":
-        Give: http_post_json("https://discord.com/api/v10" + "/channels/" + channelId + "/messages", {"embeds": [embed]}, "Bot " + tokenOrBot)
-    Give: http_post_json("https://discord.com/api/v10" + "/channels/" + channelId + "/messages", {"embeds": [embed]}, tokenOrBot["auth"])
+    def.var: tokenType
+        string
+        typeOf;
+            tokenOrBot
+    if tokenType == "string":
+        def.var: result
+            dynamic
+            http_post_json;
+                "https://discord.com/api/v10" + "/channels/" + channelId + "/messages"
+                {"embeds": [embed]}
+                "Bot " + tokenOrBot
+        Give: result
+    def.var: result
+        dynamic
+        http_post_json;
+            "https://discord.com/api/v10" + "/channels/" + channelId + "/messages"
+            {"embeds": [embed]}
+            tokenOrBot["auth"]
+    Give: result
 
 def.fun: SendEmbed(channelId:string, title:string, description:string, color:int) -> dynamic
     if ActiveToken == "":
-        flag: "No active Discord token. Call UseToken(token) first."
-    Give: http_post_json("https://discord.com/api/v10" + "/channels/" + channelId + "/messages", {"embeds": [{"title": title, "description": description, "color": color}]}, ActiveSession["auth"])
+        flag: "No active Discord token. Call UseToken with token first."
+    def.var: result
+        dynamic
+        http_post_json;
+            "https://discord.com/api/v10" + "/channels/" + channelId + "/messages"
+            {"embeds": [{"title": title, "description": description, "color": color}]}
+            ActiveSession["auth"]
+    Give: result
 
 def.fun: DMWith(tokenOrBot:dynamic, userId:string, content:string) -> dynamic
-    if typeOf(tokenOrBot) == "string":
-        Give: http_post_json("https://discord.com/api/v10" + "/users/@me/channels", {"recipient_id": userId}, "Bot " + tokenOrBot)
-    Give: http_post_json("https://discord.com/api/v10" + "/users/@me/channels", {"recipient_id": userId}, tokenOrBot["auth"])
+    def.var: tokenType
+        string
+        typeOf;
+            tokenOrBot
+    if tokenType == "string":
+        def.var: result
+            dynamic
+            http_post_json;
+                "https://discord.com/api/v10" + "/users/@me/channels"
+                {"recipient_id": userId}
+                "Bot " + tokenOrBot
+        Give: result
+    def.var: result
+        dynamic
+        http_post_json;
+            "https://discord.com/api/v10" + "/users/@me/channels"
+            {"recipient_id": userId}
+            tokenOrBot["auth"]
+    Give: result
 
 def.fun: DM(userId:string, content:string) -> dynamic
     if ActiveToken == "":
-        flag: "No active Discord token. Call UseToken(token) first."
+        flag: "No active Discord token. Call UseToken with token first."
     def.var: dm
         dynamic
-        http_post_json("https://discord.com/api/v10" + "/users/@me/channels", {"recipient_id": userId}, ActiveSession["auth"])
+        http_post_json;
+            "https://discord.com/api/v10" + "/users/@me/channels"
+            {"recipient_id": userId}
+            ActiveSession["auth"]
     if dm["ok"]:
         def.var: dmChannel
             dynamic
-            json_loads(dm["body"])
-        Give: http_post_json("https://discord.com/api/v10" + "/channels/" + dmChannel["id"] + "/messages", {"content": content}, ActiveSession["auth"])
+            json_loads;
+                dm["body"]
+        def.var: sent
+            dynamic
+            http_post_json;
+                "https://discord.com/api/v10" + "/channels/" + dmChannel["id"] + "/messages"
+                {"content": content}
+                ActiveSession["auth"]
+        Give: sent
     Give: dm
 
 def.fun: Verify(token:string) -> dynamic
-    Give: http_get("https://discord.com/api/v10" + "/users/@me", "Bot " + token)
+    def.var: result
+        dynamic
+        http_get;
+            "https://discord.com/api/v10" + "/users/@me"
+            "Bot " + token
+    Give: result
 
 def.fun: FetchChannel(bot:dynamic, channelId:string) -> dynamic
-    Give: discord.GetChannel(bot, channelId)
+    def.var: result
+        dynamic
+        discord.GetChannel;
+            bot
+            channelId
+    Give: result
 
 def.fun: FetchMessage(bot:dynamic, channelId:string, messageId:string) -> dynamic
-    Give: discord.GetMessage(bot, channelId, messageId)
+    def.var: result
+        dynamic
+        discord.GetMessage;
+            bot
+            channelId
+            messageId
+    Give: result
 
 #! =========================
-#! Additional parity helpers
+#! Additional convenience helpers
 #! =========================
 
 def.fun: ModifyCurrentUser(bot:dynamic, username:string, avatar:string) -> dynamic
-    Give: ApiPatch(bot, "/users/@me", {"username": username, "avatar": avatar})
+    def.var: result
+        dynamic
+        ApiPatch;
+            bot
+            "/users/@me"
+            {"username": username, "avatar": avatar}
+    Give: result
 
 def.fun: LeaveGuild(bot:dynamic, guildId:string) -> dynamic
-    Give: ApiDelete(bot, "/users/@me/guilds/" + guildId)
+    def.var: result
+        dynamic
+        ApiDelete;
+            bot
+            "/users/@me/guilds/" + guildId
+    Give: result
 
 def.fun: CreateGuildRole(bot:dynamic, guildId:string, name:string, permissions:string, color:int, hoist:boolean, mentionable:boolean) -> dynamic
     def.var: payload
         dynamic
         {"name": name, "permissions": permissions, "color": color, "hoist": hoist, "mentionable": mentionable}
-    Give: ApiPost(bot, "/guilds/" + guildId + "/roles", payload)
+    def.var: result
+        dynamic
+        ApiPost;
+            bot
+            "/guilds/" + guildId + "/roles"
+            payload
+    Give: result
 
 def.fun: EditGuildRole(bot:dynamic, guildId:string, roleId:string, payload:dynamic) -> dynamic
-    Give: ApiPatch(bot, "/guilds/" + guildId + "/roles/" + roleId, payload)
+    def.var: result
+        dynamic
+        ApiPatch;
+            bot
+            "/guilds/" + guildId + "/roles/" + roleId
+            payload
+    Give: result
 
 def.fun: DeleteGuildRole(bot:dynamic, guildId:string, roleId:string) -> dynamic
-    Give: ApiDelete(bot, "/guilds/" + guildId + "/roles/" + roleId)
+    def.var: result
+        dynamic
+        ApiDelete;
+            bot
+            "/guilds/" + guildId + "/roles/" + roleId
+    Give: result
 
 def.fun: KickMember(bot:dynamic, guildId:string, userId:string) -> dynamic
-    Give: ApiDelete(bot, "/guilds/" + guildId + "/members/" + userId)
+    def.var: result
+        dynamic
+        ApiDelete;
+            bot
+            "/guilds/" + guildId + "/members/" + userId
+    Give: result
 
 def.fun: TimeoutMember(bot:dynamic, guildId:string, userId:string, untilIso:string) -> dynamic
-    Give: ApiPatch(bot, "/guilds/" + guildId + "/members/" + userId, {"communication_disabled_until": untilIso})
+    def.var: result
+        dynamic
+        ApiPatch;
+            bot
+            "/guilds/" + guildId + "/members/" + userId
+            {"communication_disabled_until": untilIso}
+    Give: result
 
 def.fun: RemoveTimeout(bot:dynamic, guildId:string, userId:string) -> dynamic
-    Give: ApiPatch(bot, "/guilds/" + guildId + "/members/" + userId, {"communication_disabled_until": Empty})
+    def.var: result
+        dynamic
+        ApiPatch;
+            bot
+            "/guilds/" + guildId + "/members/" + userId
+            {"communication_disabled_until": Empty}
+    Give: result
 
 def.fun: FetchChannelMessages(bot:dynamic, channelId:string) -> dynamic
-    Give: ApiGet(bot, "/channels/" + channelId + "/messages")
+    def.var: result
+        dynamic
+        ApiGet;
+            bot
+            "/channels/" + channelId + "/messages"
+    Give: result
 
 def.fun: FetchChannelMessagesBefore(bot:dynamic, channelId:string, beforeMessageId:string, limit:int) -> dynamic
-    Give: ApiGet(bot, "/channels/" + channelId + "/messages?before=" + beforeMessageId + "&limit=" + limit)
+    def.var: result
+        dynamic
+        ApiGet;
+            bot
+            "/channels/" + channelId + "/messages?before=" + beforeMessageId + "&limit=" + limit
+    Give: result
 
 def.fun: FetchChannelMessagesAfter(bot:dynamic, channelId:string, afterMessageId:string, limit:int) -> dynamic
-    Give: ApiGet(bot, "/channels/" + channelId + "/messages?after=" + afterMessageId + "&limit=" + limit)
+    def.var: result
+        dynamic
+        ApiGet;
+            bot
+            "/channels/" + channelId + "/messages?after=" + afterMessageId + "&limit=" + limit
+    Give: result
 
 def.fun: FetchChannelMessagesAround(bot:dynamic, channelId:string, aroundMessageId:string, limit:int) -> dynamic
-    Give: ApiGet(bot, "/channels/" + channelId + "/messages?around=" + aroundMessageId + "&limit=" + limit)
+    def.var: result
+        dynamic
+        ApiGet;
+            bot
+            "/channels/" + channelId + "/messages?around=" + aroundMessageId + "&limit=" + limit
+    Give: result
 
 def.fun: CrosspostMessage(bot:dynamic, channelId:string, messageId:string) -> dynamic
-    Give: ApiPost(bot, "/channels/" + channelId + "/messages/" + messageId + "/crosspost", {})
+    def.var: result
+        dynamic
+        ApiPost;
+            bot
+            "/channels/" + channelId + "/messages/" + messageId + "/crosspost"
+            {}
+    Give: result
 
 def.fun: StartThreadWithoutMessage(bot:dynamic, channelId:string, name:string, autoArchiveMinutes:int, threadType:int) -> dynamic
     def.var: payload
         dynamic
         {"name": name, "auto_archive_duration": autoArchiveMinutes, "type": threadType}
-    Give: ApiPost(bot, "/channels/" + channelId + "/threads", payload)
+    def.var: result
+        dynamic
+        ApiPost;
+            bot
+            "/channels/" + channelId + "/threads"
+            payload
+    Give: result
 
 def.fun: JoinThread(bot:dynamic, threadId:string) -> dynamic
-    Give: ApiPut(bot, "/channels/" + threadId + "/thread-members/@me", {})
+    def.var: result
+        dynamic
+        ApiPut;
+            bot
+            "/channels/" + threadId + "/thread-members/@me"
+            {}
+    Give: result
 
 def.fun: LeaveThread(bot:dynamic, threadId:string) -> dynamic
-    Give: ApiDelete(bot, "/channels/" + threadId + "/thread-members/@me")
+    def.var: result
+        dynamic
+        ApiDelete;
+            bot
+            "/channels/" + threadId + "/thread-members/@me"
+    Give: result
 
 def.fun: AddThreadMember(bot:dynamic, threadId:string, userId:string) -> dynamic
-    Give: ApiPut(bot, "/channels/" + threadId + "/thread-members/" + userId, {})
+    def.var: result
+        dynamic
+        ApiPut;
+            bot
+            "/channels/" + threadId + "/thread-members/" + userId
+            {}
+    Give: result
 
 def.fun: RemoveThreadMember(bot:dynamic, threadId:string, userId:string) -> dynamic
-    Give: ApiDelete(bot, "/channels/" + threadId + "/thread-members/" + userId)
+    def.var: result
+        dynamic
+        ApiDelete;
+            bot
+            "/channels/" + threadId + "/thread-members/" + userId
+    Give: result
 
 def.fun: FetchThreadMembers(bot:dynamic, threadId:string, withMember:boolean) -> dynamic
     def.var: raw
@@ -567,19 +1106,47 @@ def.fun: FetchThreadMembers(bot:dynamic, threadId:string, withMember:boolean) ->
         "false"
     if withMember:
         raw is "true"
-    Give: ApiGet(bot, "/channels/" + threadId + "/thread-members?with_member=" + raw)
+    def.var: result
+        dynamic
+        ApiGet;
+            bot
+            "/channels/" + threadId + "/thread-members?with_member=" + raw
+    Give: result
 
 def.fun: CreateGuildEmoji(bot:dynamic, guildId:string, name:string, imageDataUri:string, roles:dynamic) -> dynamic
-    Give: ApiPost(bot, "/guilds/" + guildId + "/emojis", {"name": name, "image": imageDataUri, "roles": roles})
+    def.var: result
+        dynamic
+        ApiPost;
+            bot
+            "/guilds/" + guildId + "/emojis"
+            {"name": name, "image": imageDataUri, "roles": roles}
+    Give: result
 
 def.fun: EditGuildEmoji(bot:dynamic, guildId:string, emojiId:string, name:string, roles:dynamic) -> dynamic
-    Give: ApiPatch(bot, "/guilds/" + guildId + "/emojis/" + emojiId, {"name": name, "roles": roles})
+    def.var: result
+        dynamic
+        ApiPatch;
+            bot
+            "/guilds/" + guildId + "/emojis/" + emojiId
+            {"name": name, "roles": roles}
+    Give: result
 
 def.fun: DeleteGuildEmoji(bot:dynamic, guildId:string, emojiId:string) -> dynamic
-    Give: ApiDelete(bot, "/guilds/" + guildId + "/emojis/" + emojiId)
+    def.var: result
+        dynamic
+        ApiDelete;
+            bot
+            "/guilds/" + guildId + "/emojis/" + emojiId
+    Give: result
 
 def.fun: CreateGuildScheduledEvent(bot:dynamic, guildId:string, payload:dynamic) -> dynamic
-    Give: ApiPost(bot, "/guilds/" + guildId + "/scheduled-events", payload)
+    def.var: result
+        dynamic
+        ApiPost;
+            bot
+            "/guilds/" + guildId + "/scheduled-events"
+            payload
+    Give: result
 
 def.fun: FetchGuildScheduledEvents(bot:dynamic, guildId:string, withUserCount:boolean) -> dynamic
     def.var: raw
@@ -587,46 +1154,112 @@ def.fun: FetchGuildScheduledEvents(bot:dynamic, guildId:string, withUserCount:bo
         "false"
     if withUserCount:
         raw is "true"
-    Give: ApiGet(bot, "/guilds/" + guildId + "/scheduled-events?with_user_count=" + raw)
+    def.var: result
+        dynamic
+        ApiGet;
+            bot
+            "/guilds/" + guildId + "/scheduled-events?with_user_count=" + raw
+    Give: result
 
 def.fun: EditGuildScheduledEvent(bot:dynamic, guildId:string, eventId:string, payload:dynamic) -> dynamic
-    Give: ApiPatch(bot, "/guilds/" + guildId + "/scheduled-events/" + eventId, payload)
+    def.var: result
+        dynamic
+        ApiPatch;
+            bot
+            "/guilds/" + guildId + "/scheduled-events/" + eventId
+            payload
+    Give: result
 
 def.fun: DeleteGuildScheduledEvent(bot:dynamic, guildId:string, eventId:string) -> dynamic
-    Give: ApiDelete(bot, "/guilds/" + guildId + "/scheduled-events/" + eventId)
+    def.var: result
+        dynamic
+        ApiDelete;
+            bot
+            "/guilds/" + guildId + "/scheduled-events/" + eventId
+    Give: result
 
 def.fun: CreateInvite(bot:dynamic, channelId:string, maxAge:int, maxUses:int, temporary:boolean, unique:boolean) -> dynamic
     def.var: payload
         dynamic
         {"max_age": maxAge, "max_uses": maxUses, "temporary": temporary, "unique": unique}
-    Give: ApiPost(bot, "/channels/" + channelId + "/invites", payload)
+    def.var: result
+        dynamic
+        ApiPost;
+            bot
+            "/channels/" + channelId + "/invites"
+            payload
+    Give: result
 
 def.fun: FetchGuildInvites(bot:dynamic, guildId:string) -> dynamic
-    Give: ApiGet(bot, "/guilds/" + guildId + "/invites")
+    def.var: result
+        dynamic
+        ApiGet;
+            bot
+            "/guilds/" + guildId + "/invites"
+    Give: result
 
 def.fun: DeleteInvite(bot:dynamic, inviteCode:string) -> dynamic
-    Give: ApiDelete(bot, "/invites/" + inviteCode)
+    def.var: result
+        dynamic
+        ApiDelete;
+            bot
+            "/invites/" + inviteCode
+    Give: result
 
 def.fun: RegisterGuildSlashCommand(bot:dynamic, appId:string, guildId:string, name:string, description:string) -> dynamic
     def.var: payload
         dynamic
         {"name": name, "description": description, "type": 1}
-    Give: ApiPost(bot, "/applications/" + appId + "/guilds/" + guildId + "/commands", payload)
+    def.var: result
+        dynamic
+        ApiPost;
+            bot
+            "/applications/" + appId + "/guilds/" + guildId + "/commands"
+            payload
+    Give: result
 
 def.fun: FetchGuildCommands(bot:dynamic, appId:string, guildId:string) -> dynamic
-    Give: ApiGet(bot, "/applications/" + appId + "/guilds/" + guildId + "/commands")
+    def.var: result
+        dynamic
+        ApiGet;
+            bot
+            "/applications/" + appId + "/guilds/" + guildId + "/commands"
+    Give: result
 
 def.fun: EditGuildCommand(bot:dynamic, appId:string, guildId:string, commandId:string, payload:dynamic) -> dynamic
-    Give: ApiPatch(bot, "/applications/" + appId + "/guilds/" + guildId + "/commands/" + commandId, payload)
+    def.var: result
+        dynamic
+        ApiPatch;
+            bot
+            "/applications/" + appId + "/guilds/" + guildId + "/commands/" + commandId
+            payload
+    Give: result
 
 def.fun: DeleteGuildCommand(bot:dynamic, appId:string, guildId:string, commandId:string) -> dynamic
-    Give: ApiDelete(bot, "/applications/" + appId + "/guilds/" + guildId + "/commands/" + commandId)
+    def.var: result
+        dynamic
+        ApiDelete;
+            bot
+            "/applications/" + appId + "/guilds/" + guildId + "/commands/" + commandId
+    Give: result
 
 def.fun: BulkOverwriteGlobalCommands(bot:dynamic, appId:string, commands:dynamic) -> dynamic
-    Give: ApiPut(bot, "/applications/" + appId + "/commands", commands)
+    def.var: result
+        dynamic
+        ApiPut;
+            bot
+            "/applications/" + appId + "/commands"
+            commands
+    Give: result
 
 def.fun: BulkOverwriteGuildCommands(bot:dynamic, appId:string, guildId:string, commands:dynamic) -> dynamic
-    Give: ApiPut(bot, "/applications/" + appId + "/guilds/" + guildId + "/commands", commands)
+    def.var: result
+        dynamic
+        ApiPut;
+            bot
+            "/applications/" + appId + "/guilds/" + guildId + "/commands"
+            commands
+    Give: result
 
 def.fun: DeferInteraction(bot:dynamic, interactionId:string, interactionToken:string, ephemeral:boolean) -> dynamic
     def.var: flags
@@ -637,22 +1270,60 @@ def.fun: DeferInteraction(bot:dynamic, interactionId:string, interactionToken:st
     def.var: payload
         dynamic
         {"type": 5, "data": {"flags": flags}}
-    Give: http_post_json(APIBase + "/interactions/" + interactionId + "/" + interactionToken + "/callback", payload, bot["auth"])
+    def.var: result
+        dynamic
+        http_post_json;
+            APIBase + "/interactions/" + interactionId + "/" + interactionToken + "/callback"
+            payload
+            bot["auth"]
+    Give: result
 
 def.fun: EditOriginalInteraction(bot:dynamic, appId:string, interactionToken:string, payload:dynamic) -> dynamic
-    Give: ApiPatch(bot, "/webhooks/" + appId + "/" + interactionToken + "/messages/@original", payload)
+    def.var: result
+        dynamic
+        ApiPatch;
+            bot
+            "/webhooks/" + appId + "/" + interactionToken + "/messages/@original"
+            payload
+    Give: result
 
 def.fun: DeleteOriginalInteraction(bot:dynamic, appId:string, interactionToken:string) -> dynamic
-    Give: ApiDelete(bot, "/webhooks/" + appId + "/" + interactionToken + "/messages/@original")
+    def.var: result
+        dynamic
+        ApiDelete;
+            bot
+            "/webhooks/" + appId + "/" + interactionToken + "/messages/@original"
+    Give: result
 
 def.fun: EditWebhookMessage(bot:dynamic, webhookId:string, webhookToken:string, messageId:string, payload:dynamic) -> dynamic
-    Give: ApiPatch(bot, "/webhooks/" + webhookId + "/" + webhookToken + "/messages/" + messageId, payload)
+    def.var: result
+        dynamic
+        ApiPatch;
+            bot
+            "/webhooks/" + webhookId + "/" + webhookToken + "/messages/" + messageId
+            payload
+    Give: result
 
 def.fun: DeleteWebhookMessage(bot:dynamic, webhookId:string, webhookToken:string, messageId:string) -> dynamic
-    Give: ApiDelete(bot, "/webhooks/" + webhookId + "/" + webhookToken + "/messages/" + messageId)
+    def.var: result
+        dynamic
+        ApiDelete;
+            bot
+            "/webhooks/" + webhookId + "/" + webhookToken + "/messages/" + messageId
+    Give: result
 
 def.fun: FetchAuditLog(bot:dynamic, guildId:string) -> dynamic
-    Give: ApiGet(bot, "/guilds/" + guildId + "/audit-logs")
+    def.var: result
+        dynamic
+        ApiGet;
+            bot
+            "/guilds/" + guildId + "/audit-logs"
+    Give: result
 
 def.fun: FetchAuditLogFiltered(bot:dynamic, guildId:string, userId:string, actionType:int, limit:int) -> dynamic
-    Give: ApiGet(bot, "/guilds/" + guildId + "/audit-logs?user_id=" + userId + "&action_type=" + actionType + "&limit=" + limit)
+    def.var: result
+        dynamic
+        ApiGet;
+            bot
+            "/guilds/" + guildId + "/audit-logs?user_id=" + userId + "&action_type=" + actionType + "&limit=" + limit
+    Give: result
