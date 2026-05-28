@@ -1,0 +1,75 @@
+#! sys.ath
+#! Aether System Module (Python sys-inspired)
+
+def.var: version
+    string
+    sys_version()
+
+def.var: versionInfo
+    dynamic
+    [0, 1, 1]
+
+def.var: implementation
+    string
+    "AetherVM"
+
+def.var: platform
+    string
+    sys_platform()
+
+def.var: byteOrder
+    string
+    "little"
+
+def.var: executable
+    string
+    sys_executable()
+
+def.var: platformDetails
+    dynamic
+    {"os": sys_platform(), "arch": sys_arch()}
+
+def.var: maxsize
+    int
+    9223372036854775807
+
+def.var: maxunicode
+    int
+    1114111
+
+def.var: dont_write_bytecode
+    boolean
+    false
+
+def.var: argv
+    dynamic
+    sys_argv()
+
+def.var: path
+    dynamic
+    [".", "./packages"]
+
+def.var: modules
+    dynamic
+    {}
+
+def.fun: getdefaultencoding() -> string
+    Give: "utf-8"
+
+def.fun: getfilesystemencoding() -> string
+    Give: "utf-8"
+
+def.fun: Write(text:string) -> dynamic
+    say: text
+    Give: empty
+
+def.fun: WriteLine(text:string) -> dynamic
+    say: text
+    Give: empty
+
+def.fun: ReadLine() -> string
+    Give: ask("", "string")
+
+def.fun: Exit(code:int) -> dynamic
+    process_exit(code)
+    Give: empty
