@@ -1,0 +1,66 @@
+#! os.ath
+#! Operating-system module for Aether (Python-like)
+
+def.var: name
+    string
+    sys_platform()
+
+def.var: sep
+    string
+    "/"
+
+def.var: linesep
+    string
+    "\n"
+
+def.fun: Environ() -> dynamic
+    Give: os_environ()
+
+def.fun: GetEnv(key:string, defaultValue:string) -> string
+    Give: os_getenv(key, defaultValue)
+
+def.fun: SetEnv(key:string, value:string) -> dynamic
+    Give: os_setenv(key, value)
+
+def.fun: GetCwd() -> string
+    Give: os_getcwd()
+
+def.fun: Chdir(path:string) -> dynamic
+    Give: os_chdir(path)
+
+def.fun: Exit(code:int) -> dynamic
+    process_exit(code)
+    Give: empty
+
+def.fun: System(command:string) -> int
+    Give: os_system(command)
+
+def.fun: Exists(path:string) -> boolean
+    Give: os_exists(path)
+
+def.fun: IsFile(path:string) -> boolean
+    Give: os_is_file(path)
+
+def.fun: IsDir(path:string) -> boolean
+    Give: os_is_dir(path)
+
+def.fun: ListDir(path:string) -> dynamic
+    Give: os_list_dir(path)
+
+def.fun: Mkdir(path:string) -> dynamic
+    Give: os_mkdir(path)
+
+def.fun: Remove(path:string) -> dynamic
+    Give: os_remove(path)
+
+def.fun: Rename(source:string, destination:string) -> dynamic
+    Give: os_rename(source, destination)
+
+def.fun: ReadText(path:string) -> string
+    Give: file_read_text(path)
+
+def.fun: WriteText(path:string, text:string) -> dynamic
+    Give: file_write_text(path, text)
+
+def.fun: AppendText(path:string, text:string) -> dynamic
+    Give: file_append_text(path, text)
