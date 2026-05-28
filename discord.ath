@@ -366,18 +366,18 @@ def.fun: Client(token:string) -> dynamic
     def.var: auth
         string
         "Bot " + token
-    Give: {"prefix": "!", "intents": IntentsAll(), "token": token, "auth": auth, "commands": [], "events": []}
+    Give: {"prefix": "!", "intents": {"guilds": TRUE, "guild_messages": TRUE, "direct_messages": TRUE, "message_content": TRUE, "guild_members": TRUE, "guild_presences": TRUE, "typing": TRUE, "reactions": TRUE}, "token": token, "auth": auth, "commands": [], "events": []}
 
 def.fun: Bot(token:string) -> dynamic
     def.var: auth
         string
         "Bot " + token
-    Give: {"prefix": "!", "intents": IntentsAll(), "token": token, "auth": auth, "commands": [], "events": []}
+    Give: {"prefix": "!", "intents": {"guilds": TRUE, "guild_messages": TRUE, "direct_messages": TRUE, "message_content": TRUE, "guild_members": TRUE, "guild_presences": TRUE, "typing": TRUE, "reactions": TRUE}, "token": token, "auth": auth, "commands": [], "events": []}
 
 def.fun: UseToken(token:string) -> dynamic
     def.var: authed
         dynamic
-        {"prefix": "!", "intents": IntentsAll(), "token": token, "auth": "Bot " + token, "commands": [], "events": []}
+        {"prefix": "!", "intents": {"guilds": TRUE, "guild_messages": TRUE, "direct_messages": TRUE, "message_content": TRUE, "guild_members": TRUE, "guild_presences": TRUE, "typing": TRUE, "reactions": TRUE}, "token": token, "auth": "Bot " + token, "commands": [], "events": []}
     ActiveToken is token
     ActiveSession is authed
     Give: authed
@@ -397,47 +397,47 @@ def.fun: ClearSession() -> dynamic
 
 def.fun: SendWith(tokenOrBot:dynamic, channelId:string, content:string) -> dynamic
     if typeOf(tokenOrBot) == "string":
-        Give: http_post_json(APIBase + "/channels/" + channelId + "/messages", {"content": content}, "Bot " + tokenOrBot)
-    Give: http_post_json(APIBase + "/channels/" + channelId + "/messages", {"content": content}, tokenOrBot["auth"])
+        Give: http_post_json("https://discord.com/api/v10" + "/channels/" + channelId + "/messages", {"content": content}, "Bot " + tokenOrBot)
+    Give: http_post_json("https://discord.com/api/v10" + "/channels/" + channelId + "/messages", {"content": content}, tokenOrBot["auth"])
 
 def.fun: Send(channelId:string, content:string) -> dynamic
     if ActiveToken == "":
         flag: "No active Discord token. Call UseToken(token) first."
-    Give: http_post_json(APIBase + "/channels/" + channelId + "/messages", {"content": content}, ActiveSession["auth"])
+    Give: http_post_json("https://discord.com/api/v10" + "/channels/" + channelId + "/messages", {"content": content}, ActiveSession["auth"])
 
 def.fun: SendEmbedWith(tokenOrBot:dynamic, channelId:string, title:string, description:string, color:int) -> dynamic
     def.var: embed
         dynamic
         {"title": title, "description": description, "color": color}
     if typeOf(tokenOrBot) == "string":
-        Give: http_post_json(APIBase + "/channels/" + channelId + "/messages", {"embeds": [embed]}, "Bot " + tokenOrBot)
-    Give: http_post_json(APIBase + "/channels/" + channelId + "/messages", {"embeds": [embed]}, tokenOrBot["auth"])
+        Give: http_post_json("https://discord.com/api/v10" + "/channels/" + channelId + "/messages", {"embeds": [embed]}, "Bot " + tokenOrBot)
+    Give: http_post_json("https://discord.com/api/v10" + "/channels/" + channelId + "/messages", {"embeds": [embed]}, tokenOrBot["auth"])
 
 def.fun: SendEmbed(channelId:string, title:string, description:string, color:int) -> dynamic
     if ActiveToken == "":
         flag: "No active Discord token. Call UseToken(token) first."
-    Give: http_post_json(APIBase + "/channels/" + channelId + "/messages", {"embeds": [{"title": title, "description": description, "color": color}]}, ActiveSession["auth"])
+    Give: http_post_json("https://discord.com/api/v10" + "/channels/" + channelId + "/messages", {"embeds": [{"title": title, "description": description, "color": color}]}, ActiveSession["auth"])
 
 def.fun: DMWith(tokenOrBot:dynamic, userId:string, content:string) -> dynamic
     if typeOf(tokenOrBot) == "string":
-        Give: http_post_json(APIBase + "/users/@me/channels", {"recipient_id": userId}, "Bot " + tokenOrBot)
-    Give: http_post_json(APIBase + "/users/@me/channels", {"recipient_id": userId}, tokenOrBot["auth"])
+        Give: http_post_json("https://discord.com/api/v10" + "/users/@me/channels", {"recipient_id": userId}, "Bot " + tokenOrBot)
+    Give: http_post_json("https://discord.com/api/v10" + "/users/@me/channels", {"recipient_id": userId}, tokenOrBot["auth"])
 
 def.fun: DM(userId:string, content:string) -> dynamic
     if ActiveToken == "":
         flag: "No active Discord token. Call UseToken(token) first."
     def.var: dm
         dynamic
-        http_post_json(APIBase + "/users/@me/channels", {"recipient_id": userId}, ActiveSession["auth"])
+        http_post_json("https://discord.com/api/v10" + "/users/@me/channels", {"recipient_id": userId}, ActiveSession["auth"])
     if dm["ok"]:
         def.var: dmChannel
             dynamic
             json_loads(dm["body"])
-        Give: http_post_json(APIBase + "/channels/" + dmChannel["id"] + "/messages", {"content": content}, ActiveSession["auth"])
+        Give: http_post_json("https://discord.com/api/v10" + "/channels/" + dmChannel["id"] + "/messages", {"content": content}, ActiveSession["auth"])
     Give: dm
 
 def.fun: Verify(token:string) -> dynamic
-    Give: http_get(APIBase + "/users/@me", "Bot " + token)
+    Give: http_get("https://discord.com/api/v10" + "/users/@me", "Bot " + token)
 
 def.fun: FetchChannel(bot:dynamic, channelId:string) -> dynamic
     Give: discord.GetChannel(bot, channelId)
