@@ -2717,94 +2717,159 @@ def.fun: BuildCommandResponse(bot:dynamic, payload:dynamic) -> dynamic
         dynamic
         {"matched": FALSE}
 
+    def.var: content
+        string
+        string;
+            payload["content"]
+
+    def.var: raw
+        string
+        ""
+
     def.var: prefix
         string
         bot["prefix"]
     def.var: startsWithPrefix
         dynamic
         starts_with;
-            payload["content"]
+            content
             prefix
     if startsWithPrefix:
         def.var: prefixLen
             int
             len;
                 prefix
-        def.var: sliced
+        def.var: slicedByPrefix
             string
             slice;
-                payload["content"]
+                content
                 prefixLen
                 empty
-        def.var: raw
-            string
-            trim;
-                sliced
+        raw is trim;
+            slicedByPrefix
 
-        if raw != "":
-            def.var: parts
-                list
-                split;
-                    raw
-            def.var: partCount
-                int
-                len;
-                    parts
-            def.var: commandName
+    if raw == "":
+        def.var: hasBotUserId
+            dynamic
+            has_key;
+                bot
+                "bot_user_id"
+        if hasBotUserId:
+            def.var: botUserId
+                string
+                string;
+                    bot["bot_user_id"]
+            if botUserId != "":
+                def.var: mentionPrefix
+                    string
+                    "<@" + botUserId + ">"
+                def.var: mentionNickPrefix
+                    string
+                    "<@!" + botUserId + ">"
+
+                def.var: startsWithMention
+                    dynamic
+                    starts_with;
+                        content
+                        mentionPrefix
+                if startsWithMention:
+                    def.var: mentionLen
+                        int
+                        len;
+                            mentionPrefix
+                    def.var: slicedByMention
+                        string
+                        slice;
+                            content
+                            mentionLen
+                            empty
+                    raw is trim;
+                        slicedByMention
+
+                if raw == "":
+                    def.var: startsWithMentionNick
+                        dynamic
+                        starts_with;
+                            content
+                            mentionNickPrefix
+                    if startsWithMentionNick:
+                        def.var: mentionNickLen
+                            int
+                            len;
+                                mentionNickPrefix
+                        def.var: slicedByMentionNick
+                            string
+                            slice;
+                                content
+                                mentionNickLen
+                                empty
+                        raw is trim;
+                            slicedByMentionNick
+
+    if raw != "":
+        def.var: parts
+            list
+            split;
+                raw
+        def.var: partCount
+            int
+            len;
+                parts
+        def.var: commandName
+            string
+            lower;
+                parts[0]
+        def.var: args
+            dynamic
+            []
+        if partCount > 1:
+            args is slice;
+                parts
+                1
+                empty
+
+        Repeat for cmd in bot["commands"]:
+            def.var: matchedByName
+                boolean
+                FALSE
+            def.var: cmdNameLower
                 string
                 lower;
-                    parts[0]
-            def.var: args
-                dynamic
-                []
-            if partCount > 1:
-                args is slice;
-                    parts
-                    1
-                    empty
+                    cmd["name"]
+            if cmdNameLower == commandName:
+                matchedByName is TRUE
 
-            Repeat for cmd in bot["commands"]:
-                def.var: matchedByName
-                    boolean
-                    FALSE
-                def.var: cmdNameLower
-                    string
-                    lower;
-                        cmd["name"]
-                if cmdNameLower == commandName:
-                    matchedByName is TRUE
+            if not matchedByName:
+                def.var: cmdHasAliases
+                    dynamic
+                    has_key;
+                        cmd
+                        "aliases"
+                if cmdHasAliases:
+                    Repeat for aliasName in cmd["aliases"]:
+                        def.var: aliasLower
+                            string
+                            lower;
+                                string(aliasName)
+                        if aliasLower == commandName:
+                            matchedByName is TRUE
 
-                if not matchedByName:
-                    def.var: cmdHasAliases
-                        dynamic
-                        has_key;
-                            cmd
-                            "aliases"
-                    if cmdHasAliases:
-                        Repeat for aliasName in cmd["aliases"]:
-                            def.var: aliasLower
-                                string
-                                lower;
-                                    string(aliasName)
-                            if aliasLower == commandName:
-                                matchedByName is TRUE
+            if matchedByName:
+                def.var: hasResponse
+                    dynamic
+                    has_key;
+                        cmd
+                        "response"
+                if hasResponse:
+                    resolved is {"matched": TRUE, "name": cmdNameLower, "response": cmd["response"], "args": args, "raw": raw, "command": cmd, "payload": payload}
 
-                if matchedByName:
-                    def.var: hasResponse
-                        dynamic
-                        has_key;
-                            cmd
-                            "response"
-                    if hasResponse:
-                        resolved is {"matched": TRUE, "name": cmdNameLower, "response": cmd["response"], "args": args, "raw": raw, "command": cmd, "payload": payload}
-
-                    def.var: hasAction
-                        dynamic
-                        has_key;
-                            cmd
-                            "action"
-                    if hasAction:
-                        resolved is {"matched": TRUE, "name": cmdNameLower, "action": cmd["action"], "args": args, "raw": raw, "command": cmd, "payload": payload}
+                def.var: hasAction
+                    dynamic
+                    has_key;
+                        cmd
+                        "action"
+                if hasAction:
+                    resolved is {"matched": TRUE, "name": cmdNameLower, "action": cmd["action"], "args": args, "raw": raw, "command": cmd, "payload": payload}
 
     if not resolved["matched"]:
         Give: {"handled": FALSE}
@@ -4980,6 +5045,35 @@ def.fun: RunActive() -> dynamic
                             "ready"
                             TRUE
 
+                        def.var: readyHasD
+                            dynamic
+                            has_key;
+                                event
+                                "d"
+                        if readyHasD:
+                            def.var: readyData
+                                dynamic
+                                event["d"]
+                            def.var: readyHasUser
+                                dynamic
+                                has_key;
+                                    readyData
+                                    "user"
+                            if readyHasUser:
+                                def.var: readyUser
+                                    dynamic
+                                    readyData["user"]
+                                def.var: readyUserHasId
+                                    dynamic
+                                    has_key;
+                                        readyUser
+                                        "id"
+                                if readyUserHasId:
+                                    ActiveSession is dict_set;
+                                        ActiveSession
+                                        "bot_user_id"
+                                        string(readyUser["id"])
+
                     if event["t"] == "MESSAGE_CREATE":
                         def.var: messageHasD
                             dynamic
@@ -5389,6 +5483,35 @@ def.fun: RunSimpleActive() -> dynamic
                     ActiveSession
                     "ready"
                     TRUE
+
+                def.var: readyHasD
+                    dynamic
+                    has_key;
+                        event
+                        "d"
+                if readyHasD:
+                    def.var: readyData
+                        dynamic
+                        event["d"]
+                    def.var: readyHasUser
+                        dynamic
+                        has_key;
+                            readyData
+                            "user"
+                    if readyHasUser:
+                        def.var: readyUser
+                            dynamic
+                            readyData["user"]
+                        def.var: readyUserHasId
+                            dynamic
+                            has_key;
+                                readyUser
+                                "id"
+                        if readyUserHasId:
+                            ActiveSession is dict_set;
+                                ActiveSession
+                                "bot_user_id"
+                                string(readyUser["id"])
                 NEXT
 
             if event["t"] != "MESSAGE_CREATE":
