@@ -17,6 +17,26 @@ def.var: ActiveSession
     dynamic
     {}
 
+def.var: ActivePresenceStatus
+    string
+    "online"
+
+def.var: ActivePresenceAfk
+    boolean
+    FALSE
+
+def.var: ActivePresenceActivities
+    dynamic
+    []
+
+def.var: ActiveCommandCooldowns
+    dynamic
+    {}
+
+def.var: ActivePlaceholderContext
+    dynamic
+    {}
+
 def.fun: IntentsDefault() -> dynamic
     Give: {"guilds": TRUE, "guild_messages": TRUE, "direct_messages": TRUE, "message_content": FALSE, "guild_members": FALSE, "guild_presences": FALSE, "typing": FALSE, "reactions": TRUE}
 
@@ -29,14 +49,351 @@ def.fun: IntentsDefaultValue() -> int
 def.fun: IntentsMessageContentValue() -> int
     Give: 33281
 
+def.fun: IntentsFlags() -> dynamic
+    Give: {"guilds": 1, "members": 2, "bans": 4, "emojis_and_stickers": 8, "integrations": 16, "webhooks": 32, "invites": 64, "voice_states": 128, "presences": 256, "guild_messages": 512, "guild_reactions": 1024, "guild_typing": 2048, "dm_messages": 4096, "dm_reactions": 8192, "dm_typing": 16384, "message_content": 32768, "guild_scheduled_events": 65536, "auto_moderation_configuration": 1048576, "auto_moderation_execution": 2097152, "guild_polls": 16777216, "dm_polls": 33554432}
+
+def.fun: ResolveIntentsValue(intents:dynamic) -> int
+    def.var: kind
+        string
+        typeOf;
+            intents
+    if kind == "int":
+        Give: intents
+    if kind == "float":
+        def.var: castedInt
+            int
+            int;
+                intents
+        Give: castedInt
+    if kind != "dict":
+        def.var: fallbackIntents
+            int
+            IntentsMessageContentValue;
+        Give: fallbackIntents
+
+    def.var: total
+        int
+        0
+
+    def.var: enabled
+        boolean
+        FALSE
+
+    def.var: hasGuilds
+        dynamic
+        has_key;
+            intents
+            "guilds"
+    if hasGuilds:
+        if intents["guilds"]:
+            total is total + 1
+
+    enabled is FALSE
+    def.var: hasMembers
+        dynamic
+        has_key;
+            intents
+            "members"
+    if hasMembers:
+        if intents["members"]:
+            enabled is TRUE
+    def.var: hasGuildMembers
+        dynamic
+        has_key;
+            intents
+            "guild_members"
+    if hasGuildMembers:
+        if intents["guild_members"]:
+            enabled is TRUE
+    if enabled:
+        total is total + 2
+
+    enabled is FALSE
+    def.var: hasBans
+        dynamic
+        has_key;
+            intents
+            "bans"
+    if hasBans:
+        if intents["bans"]:
+            enabled is TRUE
+    def.var: hasModeration
+        dynamic
+        has_key;
+            intents
+            "moderation"
+    if hasModeration:
+        if intents["moderation"]:
+            enabled is TRUE
+    if enabled:
+        total is total + 4
+
+    enabled is FALSE
+    def.var: hasEmojisAndStickers
+        dynamic
+        has_key;
+            intents
+            "emojis_and_stickers"
+    if hasEmojisAndStickers:
+        if intents["emojis_and_stickers"]:
+            enabled is TRUE
+    def.var: hasEmojis
+        dynamic
+        has_key;
+            intents
+            "emojis"
+    if hasEmojis:
+        if intents["emojis"]:
+            enabled is TRUE
+    def.var: hasExpressions
+        dynamic
+        has_key;
+            intents
+            "expressions"
+    if hasExpressions:
+        if intents["expressions"]:
+            enabled is TRUE
+    if enabled:
+        total is total + 8
+
+    def.var: hasIntegrations
+        dynamic
+        has_key;
+            intents
+            "integrations"
+    if hasIntegrations:
+        if intents["integrations"]:
+            total is total + 16
+
+    def.var: hasWebhooks
+        dynamic
+        has_key;
+            intents
+            "webhooks"
+    if hasWebhooks:
+        if intents["webhooks"]:
+            total is total + 32
+
+    def.var: hasInvites
+        dynamic
+        has_key;
+            intents
+            "invites"
+    if hasInvites:
+        if intents["invites"]:
+            total is total + 64
+
+    def.var: hasVoiceStates
+        dynamic
+        has_key;
+            intents
+            "voice_states"
+    if hasVoiceStates:
+        if intents["voice_states"]:
+            total is total + 128
+
+    enabled is FALSE
+    def.var: hasPresences
+        dynamic
+        has_key;
+            intents
+            "presences"
+    if hasPresences:
+        if intents["presences"]:
+            enabled is TRUE
+    def.var: hasGuildPresences
+        dynamic
+        has_key;
+            intents
+            "guild_presences"
+    if hasGuildPresences:
+        if intents["guild_presences"]:
+            enabled is TRUE
+    if enabled:
+        total is total + 256
+
+    def.var: hasGuildMessages
+        dynamic
+        has_key;
+            intents
+            "guild_messages"
+    if hasGuildMessages:
+        if intents["guild_messages"]:
+            total is total + 512
+
+    def.var: hasGuildReactions
+        dynamic
+        has_key;
+            intents
+            "guild_reactions"
+    if hasGuildReactions:
+        if intents["guild_reactions"]:
+            total is total + 1024
+
+    def.var: hasGuildTyping
+        dynamic
+        has_key;
+            intents
+            "guild_typing"
+    if hasGuildTyping:
+        if intents["guild_typing"]:
+            total is total + 2048
+
+    enabled is FALSE
+    def.var: hasDmMessages
+        dynamic
+        has_key;
+            intents
+            "dm_messages"
+    if hasDmMessages:
+        if intents["dm_messages"]:
+            enabled is TRUE
+    def.var: hasDirectMessages
+        dynamic
+        has_key;
+            intents
+            "direct_messages"
+    if hasDirectMessages:
+        if intents["direct_messages"]:
+            enabled is TRUE
+    if enabled:
+        total is total + 4096
+
+    def.var: hasDmReactions
+        dynamic
+        has_key;
+            intents
+            "dm_reactions"
+    if hasDmReactions:
+        if intents["dm_reactions"]:
+            total is total + 8192
+
+    enabled is FALSE
+    def.var: hasDmTyping
+        dynamic
+        has_key;
+            intents
+            "dm_typing"
+    if hasDmTyping:
+        if intents["dm_typing"]:
+            enabled is TRUE
+    def.var: hasTyping
+        dynamic
+        has_key;
+            intents
+            "typing"
+    if hasTyping:
+        if intents["typing"]:
+            enabled is TRUE
+    if enabled:
+        total is total + 16384
+
+    def.var: hasMessageContent
+        dynamic
+        has_key;
+            intents
+            "message_content"
+    if hasMessageContent:
+        if intents["message_content"]:
+            total is total + 32768
+
+    def.var: hasGuildScheduledEvents
+        dynamic
+        has_key;
+            intents
+            "guild_scheduled_events"
+    if hasGuildScheduledEvents:
+        if intents["guild_scheduled_events"]:
+            total is total + 65536
+
+    def.var: hasAutoModerationConfiguration
+        dynamic
+        has_key;
+            intents
+            "auto_moderation_configuration"
+    if hasAutoModerationConfiguration:
+        if intents["auto_moderation_configuration"]:
+            total is total + 1048576
+
+    def.var: hasAutoModerationExecution
+        dynamic
+        has_key;
+            intents
+            "auto_moderation_execution"
+    if hasAutoModerationExecution:
+        if intents["auto_moderation_execution"]:
+            total is total + 2097152
+
+    def.var: hasGuildPolls
+        dynamic
+        has_key;
+            intents
+            "guild_polls"
+    if hasGuildPolls:
+        if intents["guild_polls"]:
+            total is total + 16777216
+
+    def.var: hasDmPolls
+        dynamic
+        has_key;
+            intents
+            "dm_polls"
+    if hasDmPolls:
+        if intents["dm_polls"]:
+            total is total + 33554432
+
+    Give: total
+
 def.fun: CreateBot(prefix:string, intents:dynamic) -> dynamic
-    Give: {"prefix": prefix, "intents": intents, "token": "", "auth": "", "commands": [], "events": []}
+    def.var: intentsValue
+        int
+        ResolveIntentsValue;
+            intents
+    Give: {"prefix": prefix, "intents": intents, "intents_value": intentsValue, "token": "", "auth": "", "commands": [], "events": [], "ready": FALSE, "presence_status": "online", "presence_afk": FALSE, "presence_activities": []}
 
 def.fun: WithToken(bot:dynamic, token:string) -> dynamic
     def.var: auth
         string
         "Bot " + token
-    Give: {"prefix": bot["prefix"], "intents": bot["intents"], "token": token, "auth": auth, "commands": bot["commands"], "events": bot["events"]}
+    def.var: intentsValue
+        int
+        ResolveIntentsValue;
+            bot["intents"]
+
+    def.var: presenceStatus
+        string
+        "online"
+    def.var: botHasPresenceStatus
+        dynamic
+        has_key;
+            bot
+            "presence_status"
+    if botHasPresenceStatus:
+        presenceStatus is bot["presence_status"]
+
+    def.var: presenceAfk
+        boolean
+        FALSE
+    def.var: botHasPresenceAfk
+        dynamic
+        has_key;
+            bot
+            "presence_afk"
+    if botHasPresenceAfk:
+        presenceAfk is bot["presence_afk"]
+
+    def.var: presenceActivities
+        dynamic
+        []
+    def.var: botHasPresenceActivities
+        dynamic
+        has_key;
+            bot
+            "presence_activities"
+    if botHasPresenceActivities:
+        presenceActivities is bot["presence_activities"]
+
+    Give: {"prefix": bot["prefix"], "intents": bot["intents"], "intents_value": intentsValue, "token": token, "auth": auth, "commands": bot["commands"], "events": bot["events"], "ready": FALSE, "presence_status": presenceStatus, "presence_afk": presenceAfk, "presence_activities": presenceActivities}
 
 def.fun: Login(token:string) -> dynamic
     def.var: auth
@@ -58,10 +415,22 @@ def.fun: GatewayInfo(bot:dynamic) -> dynamic
     Give: result
 
 def.fun: GatewayOpen(url:string) -> dynamic
+    def.var: gatewayUrl
+        string
+        url
+    def.var: endsWithSlash
+        dynamic
+        ends_with;
+            gatewayUrl
+            "/"
+    if endsWithSlash:
+        gatewayUrl is gatewayUrl + "?v=10&encoding=json"
+    otherwise:
+        gatewayUrl is gatewayUrl + "/?v=10&encoding=json"
     def.var: opened
         dynamic
         ws_connect;
-            url + "?v=10&encoding=json"
+            gatewayUrl
     Give: opened
 
 def.fun: GatewayIdentify(socketId:int, token:string, intents:int) -> dynamic
@@ -79,7 +448,7 @@ def.fun: GatewayIdentify(socketId:int, token:string, intents:int) -> dynamic
             identifyText
     Give: sendResult
 
-def.fun: GatewayHeartbeat(socketId:int, seq:int) -> dynamic
+def.fun: GatewayHeartbeat(socketId:int, seq:dynamic) -> dynamic
     def.var: heartbeat
         dynamic
         {"op": 1, "d": seq}
@@ -132,6 +501,25 @@ def.fun: Event(name:string) -> dynamic
 def.fun: BuildMessage(channelId:string, content:string) -> dynamic
     Give: {"channel_id": channelId, "content": content, "tts": FALSE}
 
+def.fun: BuildButton(customId:string, label:string, style:int) -> dynamic
+    def.var: resolvedStyle
+        int
+        style
+    if resolvedStyle <= 0:
+        resolvedStyle is 1
+    if resolvedStyle > 4:
+        resolvedStyle is 1
+    Give: {"type": 2, "custom_id": customId, "label": label, "style": resolvedStyle}
+
+def.fun: BuildLinkButton(label:string, url:string) -> dynamic
+    Give: {"type": 2, "style": 5, "label": label, "url": url}
+
+def.fun: BuildActionRow(components:dynamic) -> dynamic
+    Give: {"type": 1, "components": components}
+
+def.fun: BuildButtonRows(buttons:dynamic) -> dynamic
+    Give: [{"type": 1, "components": buttons}]
+
 def.fun: SendMessage(bot:dynamic, channelId:string, content:string) -> dynamic
     def.var: route
         string
@@ -166,6 +554,36 @@ def.fun: SendEmbedMessage(bot:dynamic, channelId:string, embed:dynamic) -> dynam
     def.var: payload
         dynamic
         {"embeds": [embed]}
+    def.var: result
+        dynamic
+        http_post_json;
+            route
+            payload
+            bot["auth"]
+    Give: result
+
+def.fun: SendComponentsMessage(bot:dynamic, channelId:string, content:string, components:dynamic) -> dynamic
+    def.var: route
+        string
+        APIBase + "/channels/" + channelId + "/messages"
+    def.var: payload
+        dynamic
+        {"content": content, "components": components}
+    def.var: result
+        dynamic
+        http_post_json;
+            route
+            payload
+            bot["auth"]
+    Give: result
+
+def.fun: SendButtonsMessage(bot:dynamic, channelId:string, content:string, buttons:dynamic) -> dynamic
+    def.var: route
+        string
+        APIBase + "/channels/" + channelId + "/messages"
+    def.var: payload
+        dynamic
+        {"content": content, "components": [{"type": 1, "components": buttons}]}
     def.var: result
         dynamic
         http_post_json;
@@ -326,6 +744,26 @@ def.fun: ReplyInteraction(bot:dynamic, interactionId:string, interactionToken:st
             bot["auth"]
     Give: result
 
+def.fun: ReplyInteractionWithComponents(bot:dynamic, interactionId:string, interactionToken:string, content:string, components:dynamic, ephemeral:boolean) -> dynamic
+    def.var: route
+        string
+        APIBase + "/interactions/" + interactionId + "/" + interactionToken + "/callback"
+    def.var: flags
+        int
+        0
+    if ephemeral:
+        flags is 64
+    def.var: payload
+        dynamic
+        {"type": 4, "data": {"content": content, "components": components, "flags": flags}}
+    def.var: result
+        dynamic
+        http_post_json;
+            route
+            payload
+            bot["auth"]
+    Give: result
+
 def.fun: FollowupInteraction(bot:dynamic, appId:string, interactionToken:string, content:string) -> dynamic
     def.var: route
         string
@@ -333,6 +771,21 @@ def.fun: FollowupInteraction(bot:dynamic, appId:string, interactionToken:string,
     def.var: payload
         dynamic
         {"content": content}
+    def.var: result
+        dynamic
+        http_post_json;
+            route
+            payload
+            bot["auth"]
+    Give: result
+
+def.fun: FollowupInteractionWithComponents(bot:dynamic, appId:string, interactionToken:string, content:string, components:dynamic) -> dynamic
+    def.var: route
+        string
+        APIBase + "/webhooks/" + appId + "/" + interactionToken
+    def.var: payload
+        dynamic
+        {"content": content, "components": components}
     def.var: result
         dynamic
         http_post_json;
@@ -371,28 +824,40 @@ def.fun: ParseGatewayData(eventPacket:dynamic) -> dynamic
 def.fun: IsGatewayDispatch(eventPacket:dynamic) -> boolean
     def.var: opcode
         int
-        discord.ParseGatewayOpcode;
+        ParseGatewayOpcode;
             eventPacket
     Give: opcode == 0
 
 def.fun: IsGatewayHello(eventPacket:dynamic) -> boolean
     def.var: opcode
         int
-        discord.ParseGatewayOpcode;
+        ParseGatewayOpcode;
             eventPacket
     Give: opcode == 10
 
 def.fun: IsGatewayHeartbeatAck(eventPacket:dynamic) -> boolean
     def.var: opcode
         int
-        discord.ParseGatewayOpcode;
+        ParseGatewayOpcode;
             eventPacket
     Give: opcode == 11
 
 def.fun: GatewaySetPresence(socketId:int, status:string, afk:boolean) -> dynamic
+    def.var: normalizedStatus
+        string
+        lower;
+            status
+    if normalizedStatus == "offline":
+        normalizedStatus is "invisible"
+    if normalizedStatus != "online":
+        if normalizedStatus != "idle":
+            if normalizedStatus != "dnd":
+                if normalizedStatus != "invisible":
+                    normalizedStatus is "online"
+
     def.var: payload
         dynamic
-        {"op": 3, "d": {"since": 0, "activities": [], "status": status, "afk": afk}}
+        {"op": 3, "d": {"since": 0, "activities": [], "status": normalizedStatus, "afk": afk}}
     def.var: payloadText
         string
         json_dumps;
@@ -403,6 +868,51 @@ def.fun: GatewaySetPresence(socketId:int, status:string, afk:boolean) -> dynamic
             socketId
             payloadText
     Give: result
+
+def.fun: GatewaySetPresenceWithActivities(socketId:int, status:string, activities:dynamic, afk:boolean) -> dynamic
+    def.var: normalizedStatus
+        string
+        lower;
+            status
+    if normalizedStatus == "offline":
+        normalizedStatus is "invisible"
+    if normalizedStatus != "online":
+        if normalizedStatus != "idle":
+            if normalizedStatus != "dnd":
+                if normalizedStatus != "invisible":
+                    normalizedStatus is "online"
+
+    def.var: payload
+        dynamic
+        {"op": 3, "d": {"since": 0, "activities": activities, "status": normalizedStatus, "afk": afk}}
+    def.var: payloadText
+        string
+        json_dumps;
+            payload
+    def.var: result
+        dynamic
+        ws_send_text;
+            socketId
+            payloadText
+    Give: result
+
+def.fun: BuildActivity(name:string, activityType:int) -> dynamic
+    Give: {"name": name, "type": activityType}
+
+def.fun: ActivityPlaying(name:string) -> dynamic
+    Give: {"name": name, "type": 0}
+
+def.fun: ActivityStreaming(name:string, url:string) -> dynamic
+    Give: {"name": name, "type": 1, "url": url}
+
+def.fun: ActivityListening(name:string) -> dynamic
+    Give: {"name": name, "type": 2}
+
+def.fun: ActivityWatching(name:string) -> dynamic
+    Give: {"name": name, "type": 3}
+
+def.fun: ActivityCompeting(name:string) -> dynamic
+    Give: {"name": name, "type": 5}
 
 def.fun: GatewayRequestGuildMembers(socketId:int, guildId:string, query:string, limit:int) -> dynamic
     def.var: payload
@@ -493,7 +1003,7 @@ def.fun: ApiDelete(bot:dynamic, route:string) -> dynamic
 def.fun: FetchUser(bot:dynamic, userId:string) -> dynamic
     def.var: result
         dynamic
-        discord.ApiGet;
+        ApiGet;
             bot
             "/users/" + userId
     Give: result
@@ -501,7 +1011,7 @@ def.fun: FetchUser(bot:dynamic, userId:string) -> dynamic
 def.fun: FetchGuilds(bot:dynamic) -> dynamic
     def.var: result
         dynamic
-        discord.ApiGet;
+        ApiGet;
             bot
             "/users/@me/guilds"
     Give: result
@@ -509,7 +1019,7 @@ def.fun: FetchGuilds(bot:dynamic) -> dynamic
 def.fun: FetchGuildChannels(bot:dynamic, guildId:string) -> dynamic
     def.var: result
         dynamic
-        discord.ApiGet;
+        ApiGet;
             bot
             "/guilds/" + guildId + "/channels"
     Give: result
@@ -517,7 +1027,7 @@ def.fun: FetchGuildChannels(bot:dynamic, guildId:string) -> dynamic
 def.fun: FetchGuildRoles(bot:dynamic, guildId:string) -> dynamic
     def.var: result
         dynamic
-        discord.ApiGet;
+        ApiGet;
             bot
             "/guilds/" + guildId + "/roles"
     Give: result
@@ -525,7 +1035,7 @@ def.fun: FetchGuildRoles(bot:dynamic, guildId:string) -> dynamic
 def.fun: FetchGuildMember(bot:dynamic, guildId:string, userId:string) -> dynamic
     def.var: result
         dynamic
-        discord.ApiGet;
+        ApiGet;
             bot
             "/guilds/" + guildId + "/members/" + userId
     Give: result
@@ -533,7 +1043,7 @@ def.fun: FetchGuildMember(bot:dynamic, guildId:string, userId:string) -> dynamic
 def.fun: EditGuildMemberNick(bot:dynamic, guildId:string, nick:string) -> dynamic
     def.var: result
         dynamic
-        discord.ApiPatch;
+        ApiPatch;
             bot
             "/guilds/" + guildId + "/members/@me"
             {"nick": nick}
@@ -542,7 +1052,7 @@ def.fun: EditGuildMemberNick(bot:dynamic, guildId:string, nick:string) -> dynami
 def.fun: AddGuildMemberRole(bot:dynamic, guildId:string, userId:string, roleId:string) -> dynamic
     def.var: result
         dynamic
-        discord.ApiPut;
+        ApiPut;
             bot
             "/guilds/" + guildId + "/members/" + userId + "/roles/" + roleId
             {}
@@ -551,7 +1061,7 @@ def.fun: AddGuildMemberRole(bot:dynamic, guildId:string, userId:string, roleId:s
 def.fun: RemoveGuildMemberRole(bot:dynamic, guildId:string, userId:string, roleId:string) -> dynamic
     def.var: result
         dynamic
-        discord.ApiDelete;
+        ApiDelete;
             bot
             "/guilds/" + guildId + "/members/" + userId + "/roles/" + roleId
     Give: result
@@ -559,7 +1069,7 @@ def.fun: RemoveGuildMemberRole(bot:dynamic, guildId:string, userId:string, roleI
 def.fun: BanMember(bot:dynamic, guildId:string, userId:string, deleteMessageSeconds:int) -> dynamic
     def.var: result
         dynamic
-        discord.ApiPut;
+        ApiPut;
             bot
             "/guilds/" + guildId + "/bans/" + userId
             {"delete_message_seconds": deleteMessageSeconds}
@@ -568,7 +1078,7 @@ def.fun: BanMember(bot:dynamic, guildId:string, userId:string, deleteMessageSeco
 def.fun: UnbanMember(bot:dynamic, guildId:string, userId:string) -> dynamic
     def.var: result
         dynamic
-        discord.ApiDelete;
+        ApiDelete;
             bot
             "/guilds/" + guildId + "/bans/" + userId
     Give: result
@@ -576,7 +1086,7 @@ def.fun: UnbanMember(bot:dynamic, guildId:string, userId:string) -> dynamic
 def.fun: BulkDeleteMessages(bot:dynamic, channelId:string, messageIds:dynamic) -> dynamic
     def.var: result
         dynamic
-        discord.ApiPost;
+        ApiPost;
             bot
             "/channels/" + channelId + "/messages/bulk-delete"
             {"messages": messageIds}
@@ -585,7 +1095,7 @@ def.fun: BulkDeleteMessages(bot:dynamic, channelId:string, messageIds:dynamic) -
 def.fun: PinMessage(bot:dynamic, channelId:string, messageId:string) -> dynamic
     def.var: result
         dynamic
-        discord.ApiPut;
+        ApiPut;
             bot
             "/channels/" + channelId + "/pins/" + messageId
             {}
@@ -594,7 +1104,7 @@ def.fun: PinMessage(bot:dynamic, channelId:string, messageId:string) -> dynamic
 def.fun: UnpinMessage(bot:dynamic, channelId:string, messageId:string) -> dynamic
     def.var: result
         dynamic
-        discord.ApiDelete;
+        ApiDelete;
             bot
             "/channels/" + channelId + "/pins/" + messageId
     Give: result
@@ -602,7 +1112,7 @@ def.fun: UnpinMessage(bot:dynamic, channelId:string, messageId:string) -> dynami
 def.fun: FetchPinnedMessages(bot:dynamic, channelId:string) -> dynamic
     def.var: result
         dynamic
-        discord.ApiGet;
+        ApiGet;
             bot
             "/channels/" + channelId + "/pins"
     Give: result
@@ -610,7 +1120,7 @@ def.fun: FetchPinnedMessages(bot:dynamic, channelId:string) -> dynamic
 def.fun: CreateGuildTextChannel(bot:dynamic, guildId:string, name:string, topic:string) -> dynamic
     def.var: result
         dynamic
-        discord.ApiPost;
+        ApiPost;
             bot
             "/guilds/" + guildId + "/channels"
             {"name": name, "type": 0, "topic": topic}
@@ -619,7 +1129,7 @@ def.fun: CreateGuildTextChannel(bot:dynamic, guildId:string, name:string, topic:
 def.fun: EditChannel(bot:dynamic, channelId:string, payload:dynamic) -> dynamic
     def.var: result
         dynamic
-        discord.ApiPatch;
+        ApiPatch;
             bot
             "/channels/" + channelId
             payload
@@ -628,7 +1138,7 @@ def.fun: EditChannel(bot:dynamic, channelId:string, payload:dynamic) -> dynamic
 def.fun: DeleteChannel(bot:dynamic, channelId:string) -> dynamic
     def.var: result
         dynamic
-        discord.ApiDelete;
+        ApiDelete;
             bot
             "/channels/" + channelId
     Give: result
@@ -636,7 +1146,7 @@ def.fun: DeleteChannel(bot:dynamic, channelId:string) -> dynamic
 def.fun: CreatePublicThread(bot:dynamic, channelId:string, messageId:string, name:string, autoArchiveMinutes:int) -> dynamic
     def.var: result
         dynamic
-        discord.ApiPost;
+        ApiPost;
             bot
             "/channels/" + channelId + "/messages/" + messageId + "/threads"
             {"name": name, "auto_archive_duration": autoArchiveMinutes}
@@ -645,7 +1155,7 @@ def.fun: CreatePublicThread(bot:dynamic, channelId:string, messageId:string, nam
 def.fun: CreateWebhook(bot:dynamic, channelId:string, name:string) -> dynamic
     def.var: result
         dynamic
-        discord.ApiPost;
+        ApiPost;
             bot
             "/channels/" + channelId + "/webhooks"
             {"name": name}
@@ -654,7 +1164,7 @@ def.fun: CreateWebhook(bot:dynamic, channelId:string, name:string) -> dynamic
 def.fun: FetchApplication(bot:dynamic) -> dynamic
     def.var: result
         dynamic
-        discord.ApiGet;
+        ApiGet;
             bot
             "/oauth2/applications/@me"
     Give: result
@@ -662,7 +1172,7 @@ def.fun: FetchApplication(bot:dynamic) -> dynamic
 def.fun: FetchGlobalCommands(bot:dynamic, appId:string) -> dynamic
     def.var: result
         dynamic
-        discord.ApiGet;
+        ApiGet;
             bot
             "/applications/" + appId + "/commands"
     Give: result
@@ -670,7 +1180,7 @@ def.fun: FetchGlobalCommands(bot:dynamic, appId:string) -> dynamic
 def.fun: CreateGlobalCommand(bot:dynamic, appId:string, commandPayload:dynamic) -> dynamic
     def.var: result
         dynamic
-        discord.ApiPost;
+        ApiPost;
             bot
             "/applications/" + appId + "/commands"
             commandPayload
@@ -679,7 +1189,7 @@ def.fun: CreateGlobalCommand(bot:dynamic, appId:string, commandPayload:dynamic) 
 def.fun: EditGlobalCommand(bot:dynamic, appId:string, commandId:string, commandPayload:dynamic) -> dynamic
     def.var: result
         dynamic
-        discord.ApiPatch;
+        ApiPatch;
             bot
             "/applications/" + appId + "/commands/" + commandId
             commandPayload
@@ -688,53 +1198,2957 @@ def.fun: EditGlobalCommand(bot:dynamic, appId:string, commandId:string, commandP
 def.fun: DeleteGlobalCommand(bot:dynamic, appId:string, commandId:string) -> dynamic
     def.var: result
         dynamic
-        discord.ApiDelete;
+        ApiDelete;
             bot
             "/applications/" + appId + "/commands/" + commandId
     Give: result
 
 #! Friendly compatibility aliases
 def.fun: Client(token:string) -> dynamic
+    def.var: allIntents
+        dynamic
+        {"guilds": TRUE, "guild_messages": TRUE, "direct_messages": TRUE, "message_content": TRUE, "guild_members": TRUE, "guild_presences": TRUE, "typing": TRUE, "reactions": TRUE}
     def.var: auth
         string
         "Bot " + token
-    Give: {"prefix": "!", "intents": {"guilds": TRUE, "guild_messages": TRUE, "direct_messages": TRUE, "message_content": TRUE, "guild_members": TRUE, "guild_presences": TRUE, "typing": TRUE, "reactions": TRUE}, "token": token, "auth": auth, "commands": [], "events": []}
-
-def.fun: Bot(token:string) -> dynamic
-    def.var: auth
-        string
-        "Bot " + token
-    Give: {"prefix": "!", "intents": {"guilds": TRUE, "guild_messages": TRUE, "direct_messages": TRUE, "message_content": TRUE, "guild_members": TRUE, "guild_presences": TRUE, "typing": TRUE, "reactions": TRUE}, "token": token, "auth": auth, "commands": [], "events": []}
-
-def.fun: UseToken(token:string) -> dynamic
     def.var: authed
         dynamic
-        {"prefix": "!", "intents": {"guilds": TRUE, "guild_messages": TRUE, "direct_messages": TRUE, "message_content": TRUE, "guild_members": TRUE, "guild_presences": TRUE, "typing": TRUE, "reactions": TRUE}, "token": token, "auth": "Bot " + token, "commands": [], "events": []}
-    ActiveToken is token
-    ActiveSession is authed
+        {"prefix": "!", "intents": allIntents, "intents_value": 54019, "token": token, "auth": auth, "commands": [], "events": [], "ready": FALSE, "presence_status": "online", "presence_afk": FALSE, "presence_activities": []}
     Give: authed
 
-def.fun: RunActive() -> dynamic
+def.fun: Bot(token:string) -> dynamic
+    def.var: allIntents
+        dynamic
+        {"guilds": TRUE, "guild_messages": TRUE, "direct_messages": TRUE, "message_content": TRUE, "guild_members": TRUE, "guild_presences": TRUE, "typing": TRUE, "reactions": TRUE}
+    def.var: auth
+        string
+        "Bot " + token
+    def.var: authed
+        dynamic
+        {"prefix": "!", "intents": allIntents, "intents_value": 54019, "token": token, "auth": auth, "commands": [], "events": [], "ready": FALSE, "presence_status": "online", "presence_afk": FALSE, "presence_activities": []}
+    Give: authed
+
+def.fun: UseToken(token:string) -> dynamic
+    def.var: allIntents
+        dynamic
+        {"guilds": TRUE, "guild_messages": TRUE, "direct_messages": TRUE, "message_content": TRUE, "guild_members": TRUE, "guild_presences": TRUE, "typing": TRUE, "reactions": TRUE}
+    def.var: auth
+        string
+        "Bot " + token
+    def.var: authed
+        dynamic
+        {"prefix": "!", "intents": allIntents, "intents_value": 54019, "token": token, "auth": auth, "commands": [], "events": [], "ready": FALSE, "presence_status": "online", "presence_afk": FALSE, "presence_activities": []}
+    ActiveToken is token
+    ActiveSession is authed
+    ActivePresenceStatus is "online"
+    ActivePresenceAfk is FALSE
+    ActivePresenceActivities is []
+    Give: authed
+
+def.fun: UseBot(bot:dynamic) -> dynamic
+    def.var: hasToken
+        dynamic
+        has_key;
+            bot
+            "token"
+    if not hasToken:
+        flag: "UseBot expects a bot object with token."
+    if bot["token"] == "":
+        flag: "UseBot expects bot token to be set. Use WithToken first."
+    ActiveToken is bot["token"]
+    ActiveSession is bot
+
+    def.var: hasPresenceStatus
+        dynamic
+        has_key;
+            bot
+            "presence_status"
+    if hasPresenceStatus:
+        ActivePresenceStatus is bot["presence_status"]
+    otherwise:
+        ActivePresenceStatus is "online"
+
+    def.var: hasPresenceAfk
+        dynamic
+        has_key;
+            bot
+            "presence_afk"
+    if hasPresenceAfk:
+        ActivePresenceAfk is bot["presence_afk"]
+    otherwise:
+        ActivePresenceAfk is FALSE
+
+    def.var: hasPresenceActivities
+        dynamic
+        has_key;
+            bot
+            "presence_activities"
+    if hasPresenceActivities:
+        ActivePresenceActivities is bot["presence_activities"]
+    otherwise:
+        ActivePresenceActivities is []
+
+    Give: bot
+
+def.fun: AddTextCommand(bot:dynamic, name:string, response:string) -> dynamic
+    def.var: loweredName
+        string
+        lower;
+            name
+    def.var: cmd
+        dynamic
+        {"name": loweredName, "aliases": [], "help": "", "usage": loweredName, "category": "general", "cooldown_seconds": 0, "response": response}
+    def.var: commandsNow
+        dynamic
+        append;
+            bot["commands"]
+            cmd
+    def.var: updated
+        dynamic
+        dict_set;
+            bot
+            "commands"
+            commandsNow
+    Give: updated
+
+def.fun: AddActionCommand(bot:dynamic, name:string, action:dynamic) -> dynamic
+    def.var: loweredName
+        string
+        lower;
+            name
+    def.var: cmd
+        dynamic
+        {"name": loweredName, "aliases": [], "help": "", "usage": loweredName, "category": "general", "cooldown_seconds": 0, "action": action}
+    def.var: commandsNow
+        dynamic
+        append;
+            bot["commands"]
+            cmd
+    def.var: updated
+        dynamic
+        dict_set;
+            bot
+            "commands"
+            commandsNow
+    Give: updated
+
+def.fun: AddTextCommandActive(name:string, response:string) -> dynamic
+    if ActiveToken == "":
+        flag: "No active Discord token. Call UseToken with token first."
+    def.var: loweredName
+        string
+        lower;
+            name
+    def.var: cmd
+        dynamic
+        {"name": loweredName, "aliases": [], "help": "", "usage": loweredName, "category": "general", "cooldown_seconds": 0, "response": response}
+    def.var: commandsNow
+        dynamic
+        append;
+            ActiveSession["commands"]
+            cmd
+    ActiveSession is dict_set;
+        ActiveSession
+        "commands"
+        commandsNow
+    Give: ActiveSession
+
+def.fun: AddActionCommandActive(name:string, action:dynamic) -> dynamic
+    if ActiveToken == "":
+        flag: "No active Discord token. Call UseToken with token first."
+    def.var: loweredName
+        string
+        lower;
+            name
+    def.var: cmd
+        dynamic
+        {"name": loweredName, "aliases": [], "help": "", "usage": loweredName, "category": "general", "cooldown_seconds": 0, "action": action}
+    def.var: commandsNow
+        dynamic
+        append;
+            ActiveSession["commands"]
+            cmd
+    ActiveSession is dict_set;
+        ActiveSession
+        "commands"
+        commandsNow
+    Give: ActiveSession
+
+def.fun: PresenceActive() -> dynamic
     if ActiveToken == "":
         flag: "No active Discord token. Call UseToken with token first."
 
+    def.var: status
+        string
+        ActivePresenceStatus
+    def.var: afk
+        boolean
+        ActivePresenceAfk
+    def.var: activities
+        dynamic
+        ActivePresenceActivities
+
+    def.var: hasStatus
+        dynamic
+        has_key;
+            ActiveSession
+            "presence_status"
+    if hasStatus:
+        status is ActiveSession["presence_status"]
+
+    def.var: hasAfk
+        dynamic
+        has_key;
+            ActiveSession
+            "presence_afk"
+    if hasAfk:
+        afk is ActiveSession["presence_afk"]
+
+    def.var: hasActivities
+        dynamic
+        has_key;
+            ActiveSession
+            "presence_activities"
+    if hasActivities:
+        activities is ActiveSession["presence_activities"]
+
+    Give: {"status": status, "afk": afk, "activities": activities}
+
+def.fun: AddTextCommandWithAliases(bot:dynamic, name:string, aliases:dynamic, response:string) -> dynamic
+    def.var: loweredName
+        string
+        lower;
+            name
+    def.var: cmd
+        dynamic
+        {"name": loweredName, "aliases": aliases, "help": "", "usage": loweredName, "category": "general", "cooldown_seconds": 0, "response": response}
+    def.var: commandsNow
+        dynamic
+        append;
+            bot["commands"]
+            cmd
+    def.var: updated
+        dynamic
+        dict_set;
+            bot
+            "commands"
+            commandsNow
+    Give: updated
+
+def.fun: AddActionCommandWithAliases(bot:dynamic, name:string, aliases:dynamic, action:dynamic) -> dynamic
+    def.var: loweredName
+        string
+        lower;
+            name
+    def.var: cmd
+        dynamic
+        {"name": loweredName, "aliases": aliases, "help": "", "usage": loweredName, "category": "general", "cooldown_seconds": 0, "action": action}
+    def.var: commandsNow
+        dynamic
+        append;
+            bot["commands"]
+            cmd
+    def.var: updated
+        dynamic
+        dict_set;
+            bot
+            "commands"
+            commandsNow
+    Give: updated
+
+def.fun: AddTextCommandWithMeta(bot:dynamic, name:string, aliases:dynamic, helpText:string, usageText:string, category:string, cooldownSeconds:int, response:string) -> dynamic
+    def.var: loweredName
+        string
+        lower;
+            name
+    def.var: normalizedUsage
+        string
+        usageText
+    if normalizedUsage == "":
+        normalizedUsage is loweredName
+    def.var: normalizedCategory
+        string
+        lower;
+            category
+    if normalizedCategory == "":
+        normalizedCategory is "general"
+    def.var: safeCooldown
+        int
+        cooldownSeconds
+    if safeCooldown < 0:
+        safeCooldown is 0
+
+    def.var: cmd
+        dynamic
+        {"name": loweredName, "aliases": aliases, "help": helpText, "usage": normalizedUsage, "category": normalizedCategory, "cooldown_seconds": safeCooldown, "response": response}
+    def.var: commandsNow
+        dynamic
+        append;
+            bot["commands"]
+            cmd
+    def.var: updated
+        dynamic
+        dict_set;
+            bot
+            "commands"
+            commandsNow
+    Give: updated
+
+def.fun: AddActionCommandWithMeta(bot:dynamic, name:string, aliases:dynamic, helpText:string, usageText:string, category:string, cooldownSeconds:int, action:dynamic) -> dynamic
+    def.var: loweredName
+        string
+        lower;
+            name
+    def.var: normalizedUsage
+        string
+        usageText
+    if normalizedUsage == "":
+        normalizedUsage is loweredName
+    def.var: normalizedCategory
+        string
+        lower;
+            category
+    if normalizedCategory == "":
+        normalizedCategory is "general"
+    def.var: safeCooldown
+        int
+        cooldownSeconds
+    if safeCooldown < 0:
+        safeCooldown is 0
+
+    def.var: cmd
+        dynamic
+        {"name": loweredName, "aliases": aliases, "help": helpText, "usage": normalizedUsage, "category": normalizedCategory, "cooldown_seconds": safeCooldown, "action": action}
+    def.var: commandsNow
+        dynamic
+        append;
+            bot["commands"]
+            cmd
+    def.var: updated
+        dynamic
+        dict_set;
+            bot
+            "commands"
+            commandsNow
+    Give: updated
+
+def.fun: AddTextCommandWithAliasesActive(name:string, aliases:dynamic, response:string) -> dynamic
+    if ActiveToken == "":
+        flag: "No active Discord token. Call UseToken with token first."
+    def.var: updated
+        dynamic
+        AddTextCommandWithAliases;
+            ActiveSession
+            name
+            aliases
+            response
+    ActiveSession is updated
+    Give: ActiveSession
+
+def.fun: AddActionCommandWithAliasesActive(name:string, aliases:dynamic, action:dynamic) -> dynamic
+    if ActiveToken == "":
+        flag: "No active Discord token. Call UseToken with token first."
+    def.var: updated
+        dynamic
+        AddActionCommandWithAliases;
+            ActiveSession
+            name
+            aliases
+            action
+    ActiveSession is updated
+    Give: ActiveSession
+
+def.fun: AddTextCommandWithMetaActive(name:string, aliases:dynamic, helpText:string, usageText:string, category:string, cooldownSeconds:int, response:string) -> dynamic
+    if ActiveToken == "":
+        flag: "No active Discord token. Call UseToken with token first."
+    def.var: updated
+        dynamic
+        AddTextCommandWithMeta;
+            ActiveSession
+            name
+            aliases
+            helpText
+            usageText
+            category
+            cooldownSeconds
+            response
+    ActiveSession is updated
+    Give: ActiveSession
+
+def.fun: AddActionCommandWithMetaActive(name:string, aliases:dynamic, helpText:string, usageText:string, category:string, cooldownSeconds:int, action:dynamic) -> dynamic
+    if ActiveToken == "":
+        flag: "No active Discord token. Call UseToken with token first."
+    def.var: updated
+        dynamic
+        AddActionCommandWithMeta;
+            ActiveSession
+            name
+            aliases
+            helpText
+            usageText
+            category
+            cooldownSeconds
+            action
+    ActiveSession is updated
+    Give: ActiveSession
+
+def.fun: BuildHelpCatalog(bot:dynamic) -> dynamic
+    def.var: entries
+        dynamic
+        []
+
+    Repeat for cmd in bot["commands"]:
+        def.var: name
+            string
+            string;
+                cmd["name"]
+
+        def.var: aliases
+            dynamic
+            []
+        def.var: cmdHasAliases
+            dynamic
+            has_key;
+                cmd
+                "aliases"
+        if cmdHasAliases:
+            aliases is cmd["aliases"]
+
+        def.var: helpText
+            string
+            ""
+        def.var: cmdHasHelp
+            dynamic
+            has_key;
+                cmd
+                "help"
+        if cmdHasHelp:
+            helpText is string;
+                cmd["help"]
+
+        def.var: usageText
+            string
+            name
+        def.var: cmdHasUsage
+            dynamic
+            has_key;
+                cmd
+                "usage"
+        if cmdHasUsage:
+            usageText is string;
+                cmd["usage"]
+
+        def.var: category
+            string
+            "general"
+        def.var: cmdHasCategory
+            dynamic
+            has_key;
+                cmd
+                "category"
+        if cmdHasCategory:
+            category is lower;
+                string(cmd["category"])
+
+        def.var: cooldownSeconds
+            int
+            0
+        def.var: cmdHasCooldown
+            dynamic
+            has_key;
+                cmd
+                "cooldown_seconds"
+        if cmdHasCooldown:
+            cooldownSeconds is int;
+                cmd["cooldown_seconds"]
+            if cooldownSeconds < 0:
+                cooldownSeconds is 0
+
+        def.var: entry
+            dynamic
+            {"name": name, "aliases": aliases, "help": helpText, "usage": usageText, "category": category, "cooldown_seconds": cooldownSeconds}
+        entries is append;
+            entries
+            entry
+
+    Give: entries
+
+def.fun: BuildHelpText(bot:dynamic, categoryFilter:string) -> string
+    def.var: requestedCategory
+        string
+        lower;
+            trim;
+                categoryFilter
+
+    def.var: lines
+        dynamic
+        []
+
+    Repeat for cmd in bot["commands"]:
+        def.var: commandCategory
+            string
+            "general"
+        def.var: hasCategory
+            dynamic
+            has_key;
+                cmd
+                "category"
+        if hasCategory:
+            commandCategory is lower;
+                string(cmd["category"])
+
+        if requestedCategory != "":
+            if commandCategory != requestedCategory:
+                NEXT
+
+        def.var: name
+            string
+            string;
+                cmd["name"]
+
+        def.var: usageText
+            string
+            name
+        def.var: hasUsage
+            dynamic
+            has_key;
+                cmd
+                "usage"
+        if hasUsage:
+            usageText is string;
+                cmd["usage"]
+
+        def.var: line
+            string
+            name + " -> " + usageText
+
+        def.var: hasHelp
+            dynamic
+            has_key;
+                cmd
+                "help"
+        if hasHelp:
+            def.var: helpText
+                string
+                string;
+                    cmd["help"]
+            if helpText != "":
+                line is line + " | " + helpText
+
+        def.var: hasAliases
+            dynamic
+            has_key;
+                cmd
+                "aliases"
+        if hasAliases:
+            def.var: aliases
+                dynamic
+                cmd["aliases"]
+            def.var: aliasCount
+                int
+                len;
+                    aliases
+            if aliasCount > 0:
+                def.var: aliasText
+                    string
+                    join;
+                        aliases
+                        ", "
+                line is line + " | aliases: " + aliasText
+
+        lines is append;
+            lines
+            line
+
+    def.var: lineCount
+        int
+        len;
+            lines
+    if lineCount == 0:
+        if requestedCategory == "":
+            Give: "No commands registered."
+        Give: "No commands in category: " + requestedCategory
+
+    Give: join;
+        lines
+        "\n"
+
+def.fun: SetPresenceActive(status:string, activities:dynamic, afk:boolean) -> dynamic
+    if ActiveToken == "":
+        flag: "No active Discord token. Call UseToken with token first."
+
+    def.var: normalizedStatus
+        string
+        lower;
+            status
+    if normalizedStatus == "offline":
+        normalizedStatus is "invisible"
+    if normalizedStatus != "online":
+        if normalizedStatus != "idle":
+            if normalizedStatus != "dnd":
+                if normalizedStatus != "invisible":
+                    normalizedStatus is "online"
+
+    ActivePresenceStatus is normalizedStatus
+    ActivePresenceAfk is afk
+    ActivePresenceActivities is activities
+
+    ActiveSession is dict_set;
+        ActiveSession
+        "presence_status"
+        normalizedStatus
+    ActiveSession is dict_set;
+        ActiveSession
+        "presence_afk"
+        afk
+    ActiveSession is dict_set;
+        ActiveSession
+        "presence_activities"
+        activities
+    Give: ActiveSession
+
+def.fun: SetStatusActive(status:string) -> dynamic
+    if ActiveToken == "":
+        flag: "No active Discord token. Call UseToken with token first."
+
+    def.var: activities
+        dynamic
+        ActivePresenceActivities
+    def.var: afk
+        boolean
+        ActivePresenceAfk
+
+    def.var: hasActivities
+        dynamic
+        has_key;
+            ActiveSession
+            "presence_activities"
+    if hasActivities:
+        activities is ActiveSession["presence_activities"]
+
+    def.var: hasAfk
+        dynamic
+        has_key;
+            ActiveSession
+            "presence_afk"
+    if hasAfk:
+        afk is ActiveSession["presence_afk"]
+
+    def.var: normalizedStatus
+        string
+        lower;
+            status
+    if normalizedStatus == "offline":
+        normalizedStatus is "invisible"
+    if normalizedStatus != "online":
+        if normalizedStatus != "idle":
+            if normalizedStatus != "dnd":
+                if normalizedStatus != "invisible":
+                    normalizedStatus is "online"
+
+    ActivePresenceStatus is normalizedStatus
+    ActivePresenceAfk is afk
+    ActivePresenceActivities is activities
+
+    ActiveSession is dict_set;
+        ActiveSession
+        "presence_status"
+        normalizedStatus
+    ActiveSession is dict_set;
+        ActiveSession
+        "presence_afk"
+        afk
+    ActiveSession is dict_set;
+        ActiveSession
+        "presence_activities"
+        activities
+    Give: ActiveSession
+
+def.fun: SetActivityActive(name:string, activityType:int) -> dynamic
+    if ActiveToken == "":
+        flag: "No active Discord token. Call UseToken with token first."
+
+    def.var: status
+        string
+        ActivePresenceStatus
+    def.var: afk
+        boolean
+        ActivePresenceAfk
+
+    def.var: hasStatus
+        dynamic
+        has_key;
+            ActiveSession
+            "presence_status"
+    if hasStatus:
+        status is ActiveSession["presence_status"]
+
+    def.var: hasAfk
+        dynamic
+        has_key;
+            ActiveSession
+            "presence_afk"
+    if hasAfk:
+        afk is ActiveSession["presence_afk"]
+
+    def.var: activity
+        dynamic
+        {"name": name, "type": activityType}
+    def.var: activities
+        dynamic
+        [activity]
+
+    ActivePresenceStatus is status
+    ActivePresenceAfk is afk
+    ActivePresenceActivities is activities
+
+    ActiveSession is dict_set;
+        ActiveSession
+        "presence_status"
+        status
+    ActiveSession is dict_set;
+        ActiveSession
+        "presence_afk"
+        afk
+    ActiveSession is dict_set;
+        ActiveSession
+        "presence_activities"
+        activities
+    Give: ActiveSession
+
+def.fun: SetPlayingActivityActive(name:string) -> dynamic
+    def.var: activity
+        dynamic
+        {"name": name, "type": 0}
+
+    def.var: status
+        string
+        ActivePresenceStatus
+    def.var: afk
+        boolean
+        ActivePresenceAfk
+
+    def.var: hasStatus
+        dynamic
+        has_key;
+            ActiveSession
+            "presence_status"
+    if hasStatus:
+        status is ActiveSession["presence_status"]
+
+    def.var: hasAfk
+        dynamic
+        has_key;
+            ActiveSession
+            "presence_afk"
+    if hasAfk:
+        afk is ActiveSession["presence_afk"]
+
+    def.var: activities
+        dynamic
+        [activity]
+
+    ActivePresenceStatus is status
+    ActivePresenceAfk is afk
+    ActivePresenceActivities is activities
+
+    ActiveSession is dict_set;
+        ActiveSession
+        "presence_status"
+        status
+    ActiveSession is dict_set;
+        ActiveSession
+        "presence_afk"
+        afk
+    ActiveSession is dict_set;
+        ActiveSession
+        "presence_activities"
+        activities
+    Give: ActiveSession
+
+def.fun: SetStreamingActivityActive(name:string, url:string) -> dynamic
+    def.var: activity
+        dynamic
+        {"name": name, "type": 1, "url": url}
+
+    def.var: status
+        string
+        ActivePresenceStatus
+    def.var: afk
+        boolean
+        ActivePresenceAfk
+
+    def.var: hasStatus
+        dynamic
+        has_key;
+            ActiveSession
+            "presence_status"
+    if hasStatus:
+        status is ActiveSession["presence_status"]
+
+    def.var: hasAfk
+        dynamic
+        has_key;
+            ActiveSession
+            "presence_afk"
+    if hasAfk:
+        afk is ActiveSession["presence_afk"]
+
+    def.var: activities
+        dynamic
+        [activity]
+
+    ActivePresenceStatus is status
+    ActivePresenceAfk is afk
+    ActivePresenceActivities is activities
+
+    ActiveSession is dict_set;
+        ActiveSession
+        "presence_status"
+        status
+    ActiveSession is dict_set;
+        ActiveSession
+        "presence_afk"
+        afk
+    ActiveSession is dict_set;
+        ActiveSession
+        "presence_activities"
+        activities
+    Give: ActiveSession
+
+def.fun: SetListeningActivityActive(name:string) -> dynamic
+    def.var: activity
+        dynamic
+        {"name": name, "type": 2}
+
+    def.var: status
+        string
+        ActivePresenceStatus
+    def.var: afk
+        boolean
+        ActivePresenceAfk
+
+    def.var: hasStatus
+        dynamic
+        has_key;
+            ActiveSession
+            "presence_status"
+    if hasStatus:
+        status is ActiveSession["presence_status"]
+
+    def.var: hasAfk
+        dynamic
+        has_key;
+            ActiveSession
+            "presence_afk"
+    if hasAfk:
+        afk is ActiveSession["presence_afk"]
+
+    def.var: activities
+        dynamic
+        [activity]
+
+    ActivePresenceStatus is status
+    ActivePresenceAfk is afk
+    ActivePresenceActivities is activities
+
+    ActiveSession is dict_set;
+        ActiveSession
+        "presence_status"
+        status
+    ActiveSession is dict_set;
+        ActiveSession
+        "presence_afk"
+        afk
+    ActiveSession is dict_set;
+        ActiveSession
+        "presence_activities"
+        activities
+    Give: ActiveSession
+
+def.fun: SetWatchingActivityActive(name:string) -> dynamic
+    def.var: activity
+        dynamic
+        {"name": name, "type": 3}
+
+    def.var: status
+        string
+        ActivePresenceStatus
+    def.var: afk
+        boolean
+        ActivePresenceAfk
+
+    def.var: hasStatus
+        dynamic
+        has_key;
+            ActiveSession
+            "presence_status"
+    if hasStatus:
+        status is ActiveSession["presence_status"]
+
+    def.var: hasAfk
+        dynamic
+        has_key;
+            ActiveSession
+            "presence_afk"
+    if hasAfk:
+        afk is ActiveSession["presence_afk"]
+
+    def.var: activities
+        dynamic
+        [activity]
+
+    ActivePresenceStatus is status
+    ActivePresenceAfk is afk
+    ActivePresenceActivities is activities
+
+    ActiveSession is dict_set;
+        ActiveSession
+        "presence_status"
+        status
+    ActiveSession is dict_set;
+        ActiveSession
+        "presence_afk"
+        afk
+    ActiveSession is dict_set;
+        ActiveSession
+        "presence_activities"
+        activities
+    Give: ActiveSession
+
+def.fun: SetCompetingActivityActive(name:string) -> dynamic
+    def.var: activity
+        dynamic
+        {"name": name, "type": 5}
+
+    def.var: status
+        string
+        ActivePresenceStatus
+    def.var: afk
+        boolean
+        ActivePresenceAfk
+
+    def.var: hasStatus
+        dynamic
+        has_key;
+            ActiveSession
+            "presence_status"
+    if hasStatus:
+        status is ActiveSession["presence_status"]
+
+    def.var: hasAfk
+        dynamic
+        has_key;
+            ActiveSession
+            "presence_afk"
+    if hasAfk:
+        afk is ActiveSession["presence_afk"]
+
+    def.var: activities
+        dynamic
+        [activity]
+
+    ActivePresenceStatus is status
+    ActivePresenceAfk is afk
+    ActivePresenceActivities is activities
+
+    ActiveSession is dict_set;
+        ActiveSession
+        "presence_status"
+        status
+    ActiveSession is dict_set;
+        ActiveSession
+        "presence_afk"
+        afk
+    ActiveSession is dict_set;
+        ActiveSession
+        "presence_activities"
+        activities
+    Give: ActiveSession
+
+def.fun: ClearActivityActive() -> dynamic
+    if ActiveToken == "":
+        flag: "No active Discord token. Call UseToken with token first."
+
+    def.var: status
+        string
+        ActivePresenceStatus
+    def.var: afk
+        boolean
+        ActivePresenceAfk
+
+    def.var: hasStatus
+        dynamic
+        has_key;
+            ActiveSession
+            "presence_status"
+    if hasStatus:
+        status is ActiveSession["presence_status"]
+
+    def.var: hasAfk
+        dynamic
+        has_key;
+            ActiveSession
+            "presence_afk"
+    if hasAfk:
+        afk is ActiveSession["presence_afk"]
+
+    ActivePresenceStatus is status
+    ActivePresenceAfk is afk
+    ActivePresenceActivities is []
+
+    ActiveSession is dict_set;
+        ActiveSession
+        "presence_status"
+        status
+    ActiveSession is dict_set;
+        ActiveSession
+        "presence_afk"
+        afk
+    ActiveSession is dict_set;
+        ActiveSession
+        "presence_activities"
+        []
+    Give: ActiveSession
+
+def.fun: ApplyPresenceActive(socketId:int) -> dynamic
+    if ActiveToken == "":
+        flag: "No active Discord token. Call UseToken with token first."
+
+    def.var: status
+        string
+        ActivePresenceStatus
+    def.var: afk
+        boolean
+        ActivePresenceAfk
+    def.var: activities
+        dynamic
+        ActivePresenceActivities
+
+    def.var: hasStatus
+        dynamic
+        has_key;
+            ActiveSession
+            "presence_status"
+    if hasStatus:
+        status is ActiveSession["presence_status"]
+
+    def.var: hasAfk
+        dynamic
+        has_key;
+            ActiveSession
+            "presence_afk"
+    if hasAfk:
+        afk is ActiveSession["presence_afk"]
+
+    def.var: hasActivities
+        dynamic
+        has_key;
+            ActiveSession
+            "presence_activities"
+    if hasActivities:
+        activities is ActiveSession["presence_activities"]
+
+    def.var: normalizedStatus
+        string
+        lower;
+            status
+    if normalizedStatus == "offline":
+        normalizedStatus is "invisible"
+    if normalizedStatus != "online":
+        if normalizedStatus != "idle":
+            if normalizedStatus != "dnd":
+                if normalizedStatus != "invisible":
+                    normalizedStatus is "online"
+
+    def.var: payload
+        dynamic
+        {"op": 3, "d": {"since": 0, "activities": activities, "status": normalizedStatus, "afk": afk}}
+    def.var: payloadText
+        string
+        json_dumps;
+            payload
+    def.var: applied
+        dynamic
+        ws_send_text;
+            socketId
+            payloadText
+    Give: applied
+
+def.fun: ClearCommands(bot:dynamic) -> dynamic
+    def.var: updated
+        dynamic
+        dict_set;
+            bot
+            "commands"
+            []
+    Give: updated
+
+def.fun: ResolveCommand(bot:dynamic, content:string) -> dynamic
+    def.var: prefix
+        string
+        bot["prefix"]
+    def.var: startsWithPrefix
+        dynamic
+        starts_with;
+            content
+            prefix
+    if not startsWithPrefix:
+        Give: {"matched": FALSE}
+
+    def.var: prefixLen
+        int
+        len;
+            prefix
+    def.var: sliced
+        string
+        slice;
+            content
+            prefixLen
+            empty
+    def.var: raw
+        string
+        trim;
+            sliced
+    if raw == "":
+        Give: {"matched": FALSE}
+
+    def.var: parts
+        list
+        split;
+            raw
+    def.var: partCount
+        int
+        len;
+            parts
+    def.var: commandName
+        string
+        lower;
+            parts[0]
+    def.var: args
+        dynamic
+        []
+    if partCount > 1:
+        args is slice;
+            parts
+            1
+            empty
+
+    Repeat for cmd in bot["commands"]:
+        def.var: cmdNameLower
+            string
+            lower;
+                cmd["name"]
+        if cmdNameLower == commandName:
+            def.var: hasResponse
+                dynamic
+                has_key;
+                    cmd
+                    "response"
+            if hasResponse:
+                Give: {"matched": TRUE, "name": commandName, "response": cmd["response"], "args": args, "raw": raw}
+
+            def.var: hasAction
+                dynamic
+                has_key;
+                    cmd
+                    "action"
+            if hasAction:
+                Give: {"matched": TRUE, "name": commandName, "action": cmd["action"], "args": args, "raw": raw}
+
+            Give: {"matched": TRUE, "name": commandName, "args": args, "raw": raw}
+
+    Give: {"matched": FALSE, "name": commandName}
+
+def.fun: ApplyArgPlaceholders(template:string, args:dynamic) -> string
+    def.var: output
+        string
+        template
+    def.var: argCount
+        int
+        len;
+            args
+
+    def.var: allArgs
+        string
+        ""
+    if argCount > 0:
+        allArgs is join;
+            args
+            " "
+    output is replace;
+        output
+        "{all}"
+        allArgs
+
+    def.var: countText
+        string
+        string;
+            argCount
+    output is replace;
+        output
+        "{count}"
+        countText
+
+    def.var: hasAuthorId
+        dynamic
+        has_key;
+            ActivePlaceholderContext
+            "author_id"
+    if hasAuthorId:
+        output is replace;
+            output
+            "{author_id}"
+            string(ActivePlaceholderContext["author_id"])
+
+    def.var: hasChannelId
+        dynamic
+        has_key;
+            ActivePlaceholderContext
+            "channel_id"
+    if hasChannelId:
+        output is replace;
+            output
+            "{channel_id}"
+            string(ActivePlaceholderContext["channel_id"])
+
+    def.var: hasGuildId
+        dynamic
+        has_key;
+            ActivePlaceholderContext
+            "guild_id"
+    if hasGuildId:
+        output is replace;
+            output
+            "{guild_id}"
+            string(ActivePlaceholderContext["guild_id"])
+
+    def.var: hasMessageId
+        dynamic
+        has_key;
+            ActivePlaceholderContext
+            "message_id"
+    if hasMessageId:
+        output is replace;
+            output
+            "{message_id}"
+            string(ActivePlaceholderContext["message_id"])
+
+    def.var: hasPrefix
+        dynamic
+        has_key;
+            ActivePlaceholderContext
+            "prefix"
+    if hasPrefix:
+        output is replace;
+            output
+            "{prefix}"
+            string(ActivePlaceholderContext["prefix"])
+
+    def.var: hasCommand
+        dynamic
+        has_key;
+            ActivePlaceholderContext
+            "command"
+    if hasCommand:
+        output is replace;
+            output
+            "{command}"
+            string(ActivePlaceholderContext["command"])
+
+    if argCount > 0:
+        output is replace;
+            output
+            "{0}"
+            string(args[0])
+
+    if argCount > 1:
+        output is replace;
+            output
+            "{1}"
+            string(args[1])
+
+    if argCount > 2:
+        output is replace;
+            output
+            "{2}"
+            string(args[2])
+
+    if argCount > 3:
+        output is replace;
+            output
+            "{3}"
+            string(args[3])
+
+    if argCount > 4:
+        output is replace;
+            output
+            "{4}"
+            string(args[4])
+
+    if argCount > 5:
+        output is replace;
+            output
+            "{5}"
+            string(args[5])
+
+    if argCount > 6:
+        output is replace;
+            output
+            "{6}"
+            string(args[6])
+
+    if argCount > 7:
+        output is replace;
+            output
+            "{7}"
+            string(args[7])
+
+    if argCount > 8:
+        output is replace;
+            output
+            "{8}"
+            string(args[8])
+
+    if argCount > 9:
+        output is replace;
+            output
+            "{9}"
+            string(args[9])
+
+    Give: output
+
+def.fun: ReplaceDynamicPlaceholders(value:dynamic, args:dynamic) -> dynamic
+    def.var: valueKind
+        string
+        typeOf;
+            value
+
+    if valueKind == "string":
+        def.var: replacedText
+            string
+            ApplyArgPlaceholders;
+                value
+                args
+        Give: replacedText
+
+    if valueKind == "list":
+        def.var: updatedList
+            dynamic
+            []
+        Repeat for listItem in value:
+            def.var: replacedItem
+                dynamic
+                ReplaceDynamicPlaceholders;
+                    listItem
+                    args
+            updatedList is append;
+                updatedList
+                replacedItem
+        Give: updatedList
+
+    if valueKind == "dict":
+        def.var: updatedDict
+            dynamic
+            {}
+        def.var: dictKeys
+            dynamic
+            keys;
+                value
+        Repeat for keyName in dictKeys:
+            def.var: replacedValue
+                dynamic
+                ReplaceDynamicPlaceholders;
+                    value[keyName]
+                    args
+            updatedDict is dict_set;
+                updatedDict
+                keyName
+                replacedValue
+        Give: updatedDict
+
+    Give: value
+
+def.fun: BuildCommandResponse(bot:dynamic, payload:dynamic) -> dynamic
+    def.var: hasContent
+        dynamic
+        has_key;
+            payload
+            "content"
+    if not hasContent:
+        Give: {"handled": FALSE}
+    def.var: hasChannelId
+        dynamic
+        has_key;
+            payload
+            "channel_id"
+    if not hasChannelId:
+        Give: {"handled": FALSE}
+
+    def.var: hasAuthor
+        dynamic
+        has_key;
+            payload
+            "author"
+    if hasAuthor:
+        def.var: author
+            dynamic
+            payload["author"]
+        def.var: authorHasBot
+            dynamic
+            has_key;
+                author
+                "bot"
+        if authorHasBot:
+            if author["bot"]:
+                Give: {"handled": FALSE, "reason": "author_is_bot"}
+
+    def.var: resolved
+        dynamic
+        {"matched": FALSE}
+
+    def.var: prefix
+        string
+        bot["prefix"]
+    def.var: startsWithPrefix
+        dynamic
+        starts_with;
+            payload["content"]
+            prefix
+    if startsWithPrefix:
+        def.var: prefixLen
+            int
+            len;
+                prefix
+        def.var: sliced
+            string
+            slice;
+                payload["content"]
+                prefixLen
+                empty
+        def.var: raw
+            string
+            trim;
+                sliced
+
+        if raw != "":
+            def.var: parts
+                list
+                split;
+                    raw
+            def.var: partCount
+                int
+                len;
+                    parts
+            def.var: commandName
+                string
+                lower;
+                    parts[0]
+            def.var: args
+                dynamic
+                []
+            if partCount > 1:
+                args is slice;
+                    parts
+                    1
+                    empty
+
+            Repeat for cmd in bot["commands"]:
+                def.var: matchedByName
+                    boolean
+                    FALSE
+                def.var: cmdNameLower
+                    string
+                    lower;
+                        cmd["name"]
+                if cmdNameLower == commandName:
+                    matchedByName is TRUE
+
+                if not matchedByName:
+                    def.var: cmdHasAliases
+                        dynamic
+                        has_key;
+                            cmd
+                            "aliases"
+                    if cmdHasAliases:
+                        Repeat for aliasName in cmd["aliases"]:
+                            def.var: aliasLower
+                                string
+                                lower;
+                                    string(aliasName)
+                            if aliasLower == commandName:
+                                matchedByName is TRUE
+
+                if matchedByName:
+                    def.var: hasResponse
+                        dynamic
+                        has_key;
+                            cmd
+                            "response"
+                    if hasResponse:
+                        resolved is {"matched": TRUE, "name": cmdNameLower, "response": cmd["response"], "args": args, "raw": raw, "command": cmd, "payload": payload}
+
+                    def.var: hasAction
+                        dynamic
+                        has_key;
+                            cmd
+                            "action"
+                    if hasAction:
+                        resolved is {"matched": TRUE, "name": cmdNameLower, "action": cmd["action"], "args": args, "raw": raw, "command": cmd, "payload": payload}
+
+    if not resolved["matched"]:
+        Give: {"handled": FALSE}
+
+    ActivePlaceholderContext is dict_set;
+        ActivePlaceholderContext
+        "command"
+        resolved["name"]
+
+    def.var: commandCooldownSeconds
+        int
+        0
+    def.var: resolvedHasCommand
+        dynamic
+        has_key;
+            resolved
+            "command"
+    if resolvedHasCommand:
+        def.var: resolvedCommand
+            dynamic
+            resolved["command"]
+        def.var: commandHasCooldown
+            dynamic
+            has_key;
+                resolvedCommand
+                "cooldown_seconds"
+        if commandHasCooldown:
+            commandCooldownSeconds is int;
+                resolvedCommand["cooldown_seconds"]
+            if commandCooldownSeconds < 0:
+                commandCooldownSeconds is 0
+
+    if commandCooldownSeconds > 0:
+        def.var: authorId
+            string
+            ""
+        def.var: payloadHasAuthor
+            dynamic
+            has_key;
+                payload
+                "author"
+        if payloadHasAuthor:
+            def.var: author
+                dynamic
+                payload["author"]
+            def.var: authorHasId
+                dynamic
+                has_key;
+                    author
+                    "id"
+            if authorHasId:
+                authorId is string;
+                    author["id"]
+
+        if authorId != "":
+            def.var: cooldownKey
+                string
+                resolved["name"] + "|" + authorId
+
+            def.var: now
+                float
+                time_now;
+
+            def.var: hasCooldownEntry
+                dynamic
+                has_key;
+                    ActiveCommandCooldowns
+                    cooldownKey
+            if hasCooldownEntry:
+                def.var: nextAvailable
+                    float
+                    float;
+                        ActiveCommandCooldowns[cooldownKey]
+                if now < nextAvailable:
+                    def.var: remainingFloat
+                        float
+                        nextAvailable - now
+                    def.var: remainingSeconds
+                        int
+                        int;
+                            remainingFloat
+                    if remainingSeconds < 1:
+                        remainingSeconds is 1
+                    def.var: cooldownMessage
+                        string
+                        "Cooldown active for `" + resolved["name"] + "`. Try again in " + string(remainingSeconds) + "s."
+                    Give: {"handled": TRUE, "mode": "message", "command": resolved["name"], "channel_id": payload["channel_id"], "content": cooldownMessage, "args": resolved["args"], "raw": resolved["raw"]}
+
+            def.var: nextAllowed
+                float
+                now + commandCooldownSeconds
+            ActiveCommandCooldowns is dict_set;
+                ActiveCommandCooldowns
+                cooldownKey
+                nextAllowed
+
+    def.var: resolvedHasResponse
+        dynamic
+        has_key;
+            resolved
+            "response"
+    if resolvedHasResponse:
+        def.var: responseTemplate
+            string
+            string;
+                resolved["response"]
+        def.var: responseContent
+            string
+            ApplyArgPlaceholders;
+                responseTemplate
+                resolved["args"]
+        Give: {"handled": TRUE, "mode": "message", "command": resolved["name"], "channel_id": payload["channel_id"], "content": responseContent, "args": resolved["args"], "raw": resolved["raw"]}
+
+    def.var: resolvedHasAction
+        dynamic
+        has_key;
+            resolved
+            "action"
+    if resolvedHasAction:
+        Give: {"handled": TRUE, "mode": "action", "command": resolved["name"], "channel_id": payload["channel_id"], "action": resolved["action"], "args": resolved["args"], "raw": resolved["raw"], "payload": payload}
+
+    Give: {"handled": FALSE, "reason": "unsupported_command_shape", "command": resolved["name"]}
+
+def.fun: ExecuteCommandAction(bot:dynamic, commandAction:dynamic) -> dynamic
+    def.var: actionSpec
+        dynamic
+        commandAction["action"]
+    def.var: actionHasType
+        dynamic
+        has_key;
+            actionSpec
+            "type"
+    if not actionHasType:
+        Give: {"ok": FALSE, "error": "action type missing"}
+
+    def.var: actionType
+        string
+        lower;
+            actionSpec["type"]
+
+    def.var: args
+        dynamic
+        []
+    def.var: commandHasArgs
+        dynamic
+        has_key;
+            commandAction
+            "args"
+    if commandHasArgs:
+        args is commandAction["args"]
+
+    def.var: argsCount
+        int
+        len;
+            args
+
+    def.var: payload
+        dynamic
+        {}
+    def.var: commandHasPayload
+        dynamic
+        has_key;
+            commandAction
+            "payload"
+    if commandHasPayload:
+        payload is commandAction["payload"]
+
+    def.var: hasRequiredRoleId
+        dynamic
+        has_key;
+            actionSpec
+            "requires_role_id"
+    def.var: hasRequiredRoleIds
+        dynamic
+        has_key;
+            actionSpec
+            "requires_role_ids"
+    if hasRequiredRoleId:
+        def.var: requiredRoleId
+            string
+            string;
+                actionSpec["requires_role_id"]
+        if requiredRoleId != "":
+            def.var: memberRoles
+                dynamic
+                []
+            def.var: payloadHasMember
+                dynamic
+                has_key;
+                    payload
+                    "member"
+            if payloadHasMember:
+                def.var: memberData
+                    dynamic
+                    payload["member"]
+                def.var: memberHasRoles
+                    dynamic
+                    has_key;
+                        memberData
+                        "roles"
+                if memberHasRoles:
+                    memberRoles is memberData["roles"]
+
+            def.var: hasRole
+                dynamic
+                contains;
+                    memberRoles
+                    requiredRoleId
+            if not hasRole:
+                def.var: deniedMessage
+                    string
+                    "You do not have permission to run this command."
+                def.var: hasDeniedMessage
+                    dynamic
+                    has_key;
+                        actionSpec
+                        "denied_message"
+                if hasDeniedMessage:
+                    deniedMessage is actionSpec["denied_message"]
+                Give: {"ok": FALSE, "error": "permission_denied", "error_user": deniedMessage}
+
+    if hasRequiredRoleIds:
+        def.var: requiredRoleIds
+            dynamic
+            actionSpec["requires_role_ids"]
+        def.var: requiredCount
+            int
+            len;
+                requiredRoleIds
+        if requiredCount > 0:
+            def.var: memberRoles
+                dynamic
+                []
+            def.var: payloadHasMember
+                dynamic
+                has_key;
+                    payload
+                    "member"
+            if payloadHasMember:
+                def.var: memberData
+                    dynamic
+                    payload["member"]
+                def.var: memberHasRoles
+                    dynamic
+                    has_key;
+                        memberData
+                        "roles"
+                if memberHasRoles:
+                    memberRoles is memberData["roles"]
+
+            def.var: isAllowed
+                boolean
+                FALSE
+            Repeat for requiredRole in requiredRoleIds:
+                def.var: requiredRoleText
+                    string
+                    string;
+                        requiredRole
+                def.var: hasRole
+                    dynamic
+                    contains;
+                        memberRoles
+                        requiredRoleText
+                if hasRole:
+                    isAllowed is TRUE
+
+            if not isAllowed:
+                def.var: deniedMessage
+                    string
+                    "You do not have permission to run this command."
+                def.var: hasDeniedMessage
+                    dynamic
+                    has_key;
+                        actionSpec
+                        "denied_message"
+                if hasDeniedMessage:
+                    deniedMessage is actionSpec["denied_message"]
+                Give: {"ok": FALSE, "error": "permission_denied", "error_user": deniedMessage}
+
+    def.var: hasRequiredUserId
+        dynamic
+        has_key;
+            actionSpec
+            "requires_user_id"
+    def.var: hasRequiredUserIds
+        dynamic
+        has_key;
+            actionSpec
+            "requires_user_ids"
+    if hasRequiredUserId:
+        def.var: requiredUserId
+            string
+            string;
+                actionSpec["requires_user_id"]
+        if requiredUserId != "":
+            def.var: authorId
+                string
+                ""
+            def.var: payloadHasAuthor
+                dynamic
+                has_key;
+                    payload
+                    "author"
+            if payloadHasAuthor:
+                def.var: authorData
+                    dynamic
+                    payload["author"]
+                def.var: authorHasId
+                    dynamic
+                    has_key;
+                        authorData
+                        "id"
+                if authorHasId:
+                    authorId is string;
+                        authorData["id"]
+
+            if authorId != requiredUserId:
+                def.var: deniedMessage
+                    string
+                    "You do not have permission to run this command."
+                def.var: hasDeniedMessage
+                    dynamic
+                    has_key;
+                        actionSpec
+                        "denied_message"
+                if hasDeniedMessage:
+                    deniedMessage is actionSpec["denied_message"]
+                Give: {"ok": FALSE, "error": "permission_denied", "error_user": deniedMessage}
+
+    if hasRequiredUserIds:
+        def.var: requiredUserIds
+            dynamic
+            actionSpec["requires_user_ids"]
+        def.var: requiredCount
+            int
+            len;
+                requiredUserIds
+        if requiredCount > 0:
+            def.var: authorId
+                string
+                ""
+            def.var: payloadHasAuthor
+                dynamic
+                has_key;
+                    payload
+                    "author"
+            if payloadHasAuthor:
+                def.var: authorData
+                    dynamic
+                    payload["author"]
+                def.var: authorHasId
+                    dynamic
+                    has_key;
+                        authorData
+                        "id"
+                if authorHasId:
+                    authorId is string;
+                        authorData["id"]
+
+            def.var: isAllowedUser
+                boolean
+                FALSE
+            Repeat for allowedUser in requiredUserIds:
+                def.var: allowedUserText
+                    string
+                    string;
+                        allowedUser
+                if authorId == allowedUserText:
+                    isAllowedUser is TRUE
+
+            if not isAllowedUser:
+                def.var: deniedMessage
+                    string
+                    "You do not have permission to run this command."
+                def.var: hasDeniedMessage
+                    dynamic
+                    has_key;
+                        actionSpec
+                        "denied_message"
+                if hasDeniedMessage:
+                    deniedMessage is actionSpec["denied_message"]
+                Give: {"ok": FALSE, "error": "permission_denied", "error_user": deniedMessage}
+
+    if actionType == "create_text_channel":
+        def.var: guildId
+            string
+            ""
+        def.var: specHasGuildId
+            dynamic
+            has_key;
+                actionSpec
+                "guild_id"
+        if specHasGuildId:
+            guildId is actionSpec["guild_id"]
+        otherwise:
+            def.var: payloadHasGuildId
+                dynamic
+                has_key;
+                    payload
+                    "guild_id"
+            if payloadHasGuildId:
+                guildId is payload["guild_id"]
+
+        if guildId != "":
+            guildId is ApplyArgPlaceholders;
+                guildId
+                args
+
+        if guildId == "":
+            Give: {"ok": FALSE, "error": "guild_id missing for create_text_channel"}
+
+        def.var: channelName
+            string
+            "new-channel"
+        def.var: specHasName
+            dynamic
+            has_key;
+                actionSpec
+                "name"
+        if specHasName:
+            channelName is actionSpec["name"]
+        otherwise:
+            if argsCount > 0:
+                channelName is args[0]
+
+        channelName is ApplyArgPlaceholders;
+            channelName
+            args
+
+        def.var: topic
+            string
+            ""
+        def.var: specHasTopic
+            dynamic
+            has_key;
+                actionSpec
+                "topic"
+        if specHasTopic:
+            topic is actionSpec["topic"]
+
+        topic is ApplyArgPlaceholders;
+            topic
+            args
+
+        def.var: created
+            dynamic
+            CreateGuildTextChannel;
+                bot
+                guildId
+                channelName
+                topic
+
+        def.var: ack
+            string
+            "Created channel " + channelName
+        def.var: specHasAck
+            dynamic
+            has_key;
+                actionSpec
+                "ack"
+        if specHasAck:
+            ack is actionSpec["ack"]
+
+        ack is ApplyArgPlaceholders;
+            ack
+            args
+
+        Give: {"ok": created["ok"], "result": created, "ack_content": ack}
+
+    if actionType == "delete_channel":
+        def.var: targetChannelId
+            string
+            ""
+        def.var: specHasChannelId
+            dynamic
+            has_key;
+                actionSpec
+                "channel_id"
+        if specHasChannelId:
+            targetChannelId is actionSpec["channel_id"]
+        otherwise:
+            if argsCount > 0:
+                targetChannelId is args[0]
+
+        if targetChannelId != "":
+            targetChannelId is ApplyArgPlaceholders;
+                targetChannelId
+                args
+
+        if targetChannelId == "":
+            Give: {"ok": FALSE, "error": "channel_id missing for delete_channel"}
+
+        def.var: deleted
+            dynamic
+            DeleteChannel;
+                bot
+                targetChannelId
+
+        def.var: ack
+            string
+            "Deleted channel " + targetChannelId
+        def.var: specHasAck
+            dynamic
+            has_key;
+                actionSpec
+                "ack"
+        if specHasAck:
+            ack is actionSpec["ack"]
+
+        ack is ApplyArgPlaceholders;
+            ack
+            args
+
+        Give: {"ok": deleted["ok"], "result": deleted, "ack_content": ack}
+
+    if actionType == "create_role":
+        def.var: guildId
+            string
+            ""
+        def.var: specHasGuildId
+            dynamic
+            has_key;
+                actionSpec
+                "guild_id"
+        if specHasGuildId:
+            guildId is actionSpec["guild_id"]
+        otherwise:
+            def.var: payloadHasGuildId
+                dynamic
+                has_key;
+                    payload
+                    "guild_id"
+            if payloadHasGuildId:
+                guildId is payload["guild_id"]
+
+        if guildId != "":
+            guildId is ApplyArgPlaceholders;
+                guildId
+                args
+
+        if guildId == "":
+            Give: {"ok": FALSE, "error": "guild_id missing for create_role"}
+
+        def.var: roleName
+            string
+            "new-role"
+        def.var: specHasName
+            dynamic
+            has_key;
+                actionSpec
+                "name"
+        if specHasName:
+            roleName is actionSpec["name"]
+        otherwise:
+            if argsCount > 0:
+                roleName is args[0]
+
+        roleName is ApplyArgPlaceholders;
+            roleName
+            args
+
+        def.var: permissions
+            string
+            "0"
+        def.var: specHasPermissions
+            dynamic
+            has_key;
+                actionSpec
+                "permissions"
+        if specHasPermissions:
+            permissions is actionSpec["permissions"]
+
+        permissions is ApplyArgPlaceholders;
+            permissions
+            args
+
+        def.var: color
+            int
+            0
+        def.var: specHasColor
+            dynamic
+            has_key;
+                actionSpec
+                "color"
+        if specHasColor:
+            def.var: rawColor
+                string
+                string;
+                    actionSpec["color"]
+            rawColor is ApplyArgPlaceholders;
+                rawColor
+                args
+            def.var: parsedColor
+                int
+                int;
+                    rawColor
+            color is parsedColor
+
+        def.var: hoist
+            boolean
+            FALSE
+        def.var: specHasHoist
+            dynamic
+            has_key;
+                actionSpec
+                "hoist"
+        if specHasHoist:
+            hoist is actionSpec["hoist"]
+
+        def.var: mentionable
+            boolean
+            FALSE
+        def.var: specHasMentionable
+            dynamic
+            has_key;
+                actionSpec
+                "mentionable"
+        if specHasMentionable:
+            mentionable is actionSpec["mentionable"]
+
+        def.var: created
+            dynamic
+            CreateGuildRole;
+                bot
+                guildId
+                roleName
+                permissions
+                color
+                hoist
+                mentionable
+
+        def.var: ack
+            string
+            "Created role " + roleName
+        def.var: specHasAck
+            dynamic
+            has_key;
+                actionSpec
+                "ack"
+        if specHasAck:
+            ack is actionSpec["ack"]
+
+        ack is ApplyArgPlaceholders;
+            ack
+            args
+
+        Give: {"ok": created["ok"], "result": created, "ack_content": ack}
+
+    if actionType == "ban_member":
+        def.var: guildId
+            string
+            ""
+        def.var: specHasGuildId
+            dynamic
+            has_key;
+                actionSpec
+                "guild_id"
+        if specHasGuildId:
+            guildId is actionSpec["guild_id"]
+        otherwise:
+            def.var: payloadHasGuildId
+                dynamic
+                has_key;
+                    payload
+                    "guild_id"
+            if payloadHasGuildId:
+                guildId is payload["guild_id"]
+
+        if guildId != "":
+            guildId is ApplyArgPlaceholders;
+                guildId
+                args
+
+        if guildId == "":
+            Give: {"ok": FALSE, "error": "guild_id missing for ban_member"}
+
+        def.var: userId
+            string
+            ""
+        def.var: specHasUserId
+            dynamic
+            has_key;
+                actionSpec
+                "user_id"
+        if specHasUserId:
+            userId is actionSpec["user_id"]
+        otherwise:
+            if argsCount > 0:
+                userId is args[0]
+
+        if userId != "":
+            userId is ApplyArgPlaceholders;
+                userId
+                args
+
+        if userId == "":
+            Give: {"ok": FALSE, "error": "user_id missing for ban_member"}
+
+        def.var: deleteMessageSeconds
+            int
+            0
+        def.var: specHasDeleteSeconds
+            dynamic
+            has_key;
+                actionSpec
+                "delete_message_seconds"
+        if specHasDeleteSeconds:
+            def.var: rawDeleteSeconds
+                string
+                string;
+                    actionSpec["delete_message_seconds"]
+            rawDeleteSeconds is ApplyArgPlaceholders;
+                rawDeleteSeconds
+                args
+            def.var: parsedDeleteSeconds
+                int
+                int;
+                    rawDeleteSeconds
+            deleteMessageSeconds is parsedDeleteSeconds
+
+        def.var: banned
+            dynamic
+            BanMember;
+                bot
+                guildId
+                userId
+                deleteMessageSeconds
+
+        def.var: ack
+            string
+            "Banned member " + userId
+        def.var: specHasAck
+            dynamic
+            has_key;
+                actionSpec
+                "ack"
+        if specHasAck:
+            ack is actionSpec["ack"]
+
+        ack is ApplyArgPlaceholders;
+            ack
+            args
+
+        Give: {"ok": banned["ok"], "result": banned, "ack_content": ack}
+
+    if actionType == "send_embed":
+        def.var: targetChannelId
+            string
+            commandAction["channel_id"]
+        def.var: specHasChannelId
+            dynamic
+            has_key;
+                actionSpec
+                "channel_id"
+        if specHasChannelId:
+            targetChannelId is actionSpec["channel_id"]
+
+        targetChannelId is ApplyArgPlaceholders;
+            targetChannelId
+            args
+
+        if targetChannelId == "":
+            Give: {"ok": FALSE, "error": "channel_id missing for send_embed"}
+
+        def.var: title
+            string
+            "Angela"
+        def.var: specHasTitle
+            dynamic
+            has_key;
+                actionSpec
+                "title"
+        if specHasTitle:
+            title is actionSpec["title"]
+        title is ApplyArgPlaceholders;
+            title
+            args
+
+        def.var: description
+            string
+            ""
+        def.var: specHasDescription
+            dynamic
+            has_key;
+                actionSpec
+                "description"
+        if specHasDescription:
+            description is actionSpec["description"]
+        description is ApplyArgPlaceholders;
+            description
+            args
+
+        def.var: color
+            int
+            5793266
+        def.var: specHasColor
+            dynamic
+            has_key;
+                actionSpec
+                "color"
+        if specHasColor:
+            def.var: rawColor
+                string
+                string;
+                    actionSpec["color"]
+            rawColor is ApplyArgPlaceholders;
+                rawColor
+                args
+            Do:
+                def.var: parsedColor
+                    int
+                    int;
+                        rawColor
+                color is parsedColor
+            Catch as err:
+                color is 5793266
+
+        def.var: embed
+            dynamic
+            BuildEmbed;
+                title
+                description
+                color
+
+        def.var: sent
+            dynamic
+            SendEmbedMessage;
+                bot
+                targetChannelId
+                embed
+
+        def.var: ack
+            string
+            ""
+        def.var: specHasAck
+            dynamic
+            has_key;
+                actionSpec
+                "ack"
+        if specHasAck:
+            ack is actionSpec["ack"]
+            ack is ApplyArgPlaceholders;
+                ack
+                args
+
+        Give: {"ok": sent["ok"], "result": sent, "ack_content": ack}
+
+    if actionType == "send_help":
+        def.var: targetChannelId
+            string
+            commandAction["channel_id"]
+        def.var: specHasChannelId
+            dynamic
+            has_key;
+                actionSpec
+                "channel_id"
+        if specHasChannelId:
+            targetChannelId is actionSpec["channel_id"]
+
+        targetChannelId is ApplyArgPlaceholders;
+            targetChannelId
+            args
+
+        if targetChannelId == "":
+            Give: {"ok": FALSE, "error": "channel_id missing for send_help"}
+
+        def.var: helpCategory
+            string
+            ""
+        def.var: specHasCategory
+            dynamic
+            has_key;
+                actionSpec
+                "category"
+        if specHasCategory:
+            helpCategory is string;
+                actionSpec["category"]
+            helpCategory is ApplyArgPlaceholders;
+                helpCategory
+                args
+            helpCategory is lower;
+                trim;
+                    helpCategory
+
+        def.var: helpTitle
+            string
+            "Command Help"
+        def.var: specHasTitle
+            dynamic
+            has_key;
+                actionSpec
+                "title"
+        if specHasTitle:
+            helpTitle is string;
+                actionSpec["title"]
+            helpTitle is ApplyArgPlaceholders;
+                helpTitle
+                args
+
+        def.var: helpColor
+            int
+            5793266
+        def.var: specHasColor
+            dynamic
+            has_key;
+                actionSpec
+                "color"
+        if specHasColor:
+            def.var: rawColor
+                string
+                string;
+                    actionSpec["color"]
+            rawColor is ApplyArgPlaceholders;
+                rawColor
+                args
+            Do:
+                def.var: parsedColor
+                    int
+                    int;
+                        rawColor
+                helpColor is parsedColor
+            Catch as err:
+                helpColor is 5793266
+
+        def.var: helpText
+            string
+            BuildHelpText;
+                bot
+                helpCategory
+
+        def.var: helpEmbed
+            dynamic
+            BuildEmbed;
+                helpTitle
+                helpText
+                helpColor
+
+        def.var: sent
+            dynamic
+            SendEmbedMessage;
+                bot
+                targetChannelId
+                helpEmbed
+
+        def.var: ack
+            string
+            ""
+        def.var: specHasAck
+            dynamic
+            has_key;
+                actionSpec
+                "ack"
+        if specHasAck:
+            ack is actionSpec["ack"]
+            ack is ApplyArgPlaceholders;
+                ack
+                args
+
+        Give: {"ok": sent["ok"], "result": sent, "ack_content": ack}
+
+    if actionType == "append_file_log":
+        def.var: logPath
+            string
+            "data/angela.log"
+        def.var: hasPath
+            dynamic
+            has_key;
+                actionSpec
+                "path"
+        if hasPath:
+            logPath is actionSpec["path"]
+        logPath is ApplyArgPlaceholders;
+            logPath
+            args
+
+        def.var: logLine
+            string
+            ""
+        def.var: hasLine
+            dynamic
+            has_key;
+                actionSpec
+                "line"
+        if hasLine:
+            logLine is actionSpec["line"]
+        otherwise:
+            if argsCount > 0:
+                def.var: firstArgText
+                    string
+                    string;
+                        args[0]
+                logLine is firstArgText
+
+        logLine is ApplyArgPlaceholders;
+            logLine
+            args
+
+        def.var: includeTimestamp
+            boolean
+            TRUE
+        def.var: hasTimestamp
+            dynamic
+            has_key;
+                actionSpec
+                "timestamp"
+        if hasTimestamp:
+            includeTimestamp is actionSpec["timestamp"]
+
+        if includeTimestamp:
+            def.var: nowValue
+                dynamic
+                time_now;
+            def.var: nowText
+                string
+                string;
+                    nowValue
+            logLine is nowText + " | " + logLine
+
+        Do:
+            file_append_text;
+                logPath
+                logLine + "\n"
+        Catch as err:
+            def.var: errText
+                string
+                string;
+                    err
+            Give: {"ok": FALSE, "error": "append_file_log failed: " + errText, "error_user": "I could not write the log entry."}
+
+        def.var: ack
+            string
+            "Logged."
+        def.var: hasAck
+            dynamic
+            has_key;
+                actionSpec
+                "ack"
+        if hasAck:
+            ack is actionSpec["ack"]
+            ack is ApplyArgPlaceholders;
+                ack
+                args
+
+        Give: {"ok": TRUE, "result": {"path": logPath, "line": logLine}, "ack_content": ack}
+
+    if actionType == "read_file_tail":
+        def.var: logPath
+            string
+            "data/angela.log"
+        def.var: hasPath
+            dynamic
+            has_key;
+                actionSpec
+                "path"
+        if hasPath:
+            logPath is actionSpec["path"]
+        logPath is ApplyArgPlaceholders;
+            logPath
+            args
+
+        def.var: maxChars
+            int
+            1400
+        def.var: hasMaxChars
+            dynamic
+            has_key;
+                actionSpec
+                "max_chars"
+        if hasMaxChars:
+            def.var: maxCharsRaw
+                string
+                string;
+                    actionSpec["max_chars"]
+            maxCharsRaw is ApplyArgPlaceholders;
+                maxCharsRaw
+                args
+            Do:
+                def.var: parsedMaxChars
+                    int
+                    int;
+                        maxCharsRaw
+                maxChars is parsedMaxChars
+            Catch as err:
+                maxChars is 1400
+
+        if maxChars <= 0:
+            maxChars is 1400
+
+        def.var: label
+            string
+            "Recent records"
+        def.var: hasLabel
+            dynamic
+            has_key;
+                actionSpec
+                "label"
+        if hasLabel:
+            label is actionSpec["label"]
+        label is ApplyArgPlaceholders;
+            label
+            args
+
+        def.var: exists
+            dynamic
+            os_exists;
+                logPath
+        if not exists:
+            Give: {"ok": TRUE, "result": {"path": logPath, "exists": FALSE}, "ack_content": label + ": no records yet."}
+
+        def.var: logText
+            string
+            ""
+        Do:
+            logText is file_read_text;
+                logPath
+        Catch as err:
+            def.var: errText
+                string
+                string;
+                    err
+            Give: {"ok": FALSE, "error": "read_file_tail failed: " + errText, "error_user": "I could not read the log file."}
+
+        if logText == "":
+            Give: {"ok": TRUE, "result": {"path": logPath, "exists": TRUE}, "ack_content": label + ": no records yet."}
+
+        def.var: logLen
+            int
+            len;
+                logText
+        if logLen > maxChars:
+            def.var: startIndex
+                int
+                logLen - maxChars
+            logText is slice;
+                logText
+                startIndex
+                empty
+
+        def.var: ackContent
+            string
+            label + "\n" + logText
+
+        Give: {"ok": TRUE, "result": {"path": logPath, "exists": TRUE}, "ack_content": ackContent}
+
+    if actionType == "api_post":
+        def.var: hasRoute
+            dynamic
+            has_key;
+                actionSpec
+                "route"
+        if not hasRoute:
+            Give: {"ok": FALSE, "error": "route missing for api_post"}
+
+        def.var: apiPayload
+            dynamic
+            {}
+        def.var: hasPayload
+            dynamic
+            has_key;
+                actionSpec
+                "payload"
+        if hasPayload:
+            apiPayload is actionSpec["payload"]
+
+        def.var: apiRoute
+            string
+            ApplyArgPlaceholders;
+                actionSpec["route"]
+                args
+
+        apiPayload is ReplaceDynamicPlaceholders;
+            apiPayload
+            args
+
+        def.var: posted
+            dynamic
+            ApiPost;
+                bot
+                apiRoute
+                apiPayload
+
+        def.var: ack
+            string
+            "Action sent."
+        def.var: specHasAck
+            dynamic
+            has_key;
+                actionSpec
+                "ack"
+        if specHasAck:
+            ack is actionSpec["ack"]
+
+        ack is ApplyArgPlaceholders;
+            ack
+            args
+
+        Give: {"ok": posted["ok"], "result": posted, "ack_content": ack}
+
+    Give: {"ok": FALSE, "error": "unknown action type: " + actionType}
+
+def.fun: ProcessMessageCreate(bot:dynamic, payload:dynamic) -> dynamic
+    ActivePlaceholderContext is {}
+
+    ActivePlaceholderContext is dict_set;
+        ActivePlaceholderContext
+        "prefix"
+        bot["prefix"]
+
+    def.var: payloadHasChannelId
+        dynamic
+        has_key;
+            payload
+            "channel_id"
+    if payloadHasChannelId:
+        ActivePlaceholderContext is dict_set;
+            ActivePlaceholderContext
+            "channel_id"
+            string(payload["channel_id"])
+
+    def.var: payloadHasGuildId
+        dynamic
+        has_key;
+            payload
+            "guild_id"
+    if payloadHasGuildId:
+        ActivePlaceholderContext is dict_set;
+            ActivePlaceholderContext
+            "guild_id"
+            string(payload["guild_id"])
+
+    def.var: payloadHasMessageId
+        dynamic
+        has_key;
+            payload
+            "id"
+    if payloadHasMessageId:
+        ActivePlaceholderContext is dict_set;
+            ActivePlaceholderContext
+            "message_id"
+            string(payload["id"])
+
+    def.var: payloadHasAuthor
+        dynamic
+        has_key;
+            payload
+            "author"
+    if payloadHasAuthor:
+        def.var: sourceAuthor
+            dynamic
+            payload["author"]
+        def.var: authorHasId
+            dynamic
+            has_key;
+                sourceAuthor
+                "id"
+        if authorHasId:
+            ActivePlaceholderContext is dict_set;
+                ActivePlaceholderContext
+                "author_id"
+                string(sourceAuthor["id"])
+
+    def.var: action
+        dynamic
+        BuildCommandResponse;
+            bot
+            payload
+
+    if not action["handled"]:
+        Give: action
+
+    def.var: actionMode
+        string
+        "message"
+    def.var: actionHasMode
+        dynamic
+        has_key;
+            action
+            "mode"
+    if actionHasMode:
+        actionMode is action["mode"]
+
+    if actionMode == "action":
+        def.var: executed
+            dynamic
+            ExecuteCommandAction;
+                bot
+                action
+
+        if not executed["ok"]:
+            def.var: errorContent
+                string
+                "Command failed."
+            def.var: hasErrorUser
+                dynamic
+                has_key;
+                    executed
+                    "error_user"
+            if hasErrorUser:
+                errorContent is executed["error_user"]
+            otherwise:
+                def.var: hasError
+                    dynamic
+                    has_key;
+                        executed
+                        "error"
+                if hasError:
+                    def.var: errorText
+                        string
+                        string;
+                            executed["error"]
+                    errorContent is "Command failed: " + errorText
+
+            def.var: failureSent
+                dynamic
+                SendMessage;
+                    bot
+                    action["channel_id"]
+                    errorContent
+
+            Give: {"handled": TRUE, "command": action["command"], "mode": "action", "ok": FALSE, "detail": executed, "error_send": failureSent}
+
+        def.var: auditSent
+            dynamic
+            {}
+        def.var: hasAuditChannel
+            dynamic
+            has_key;
+                action["action"]
+                "audit_channel_id"
+        if hasAuditChannel:
+            def.var: auditChannelId
+                string
+                string;
+                    action["action"]["audit_channel_id"]
+            auditChannelId is ApplyArgPlaceholders;
+                auditChannelId
+                action["args"]
+
+            if auditChannelId != "":
+                def.var: auditMessage
+                    string
+                    "Audit | command=" + action["command"]
+                def.var: hasAuditMessage
+                    dynamic
+                    has_key;
+                        action["action"]
+                        "audit_message"
+                if hasAuditMessage:
+                    auditMessage is action["action"]["audit_message"]
+
+                auditMessage is ApplyArgPlaceholders;
+                    auditMessage
+                    action["args"]
+
+                def.var: actorSuffix
+                    string
+                    ""
+                def.var: actionHasPayload
+                    dynamic
+                    has_key;
+                        action
+                        "payload"
+                if actionHasPayload:
+                    def.var: sourcePayload
+                        dynamic
+                        action["payload"]
+                    def.var: payloadHasAuthor
+                        dynamic
+                        has_key;
+                            sourcePayload
+                            "author"
+                    if payloadHasAuthor:
+                        def.var: sourceAuthor
+                            dynamic
+                            sourcePayload["author"]
+                        def.var: authorHasId
+                            dynamic
+                            has_key;
+                                sourceAuthor
+                                "id"
+                        if authorHasId:
+                            def.var: actorId
+                                string
+                                string;
+                                    sourceAuthor["id"]
+                            actorSuffix is " | actor=" + actorId
+
+                auditMessage is auditMessage + actorSuffix
+
+                auditSent is SendMessage;
+                    bot
+                    auditChannelId
+                    auditMessage
+
+        def.var: hasAckContent
+            dynamic
+            has_key;
+                executed
+                "ack_content"
+        if hasAckContent:
+            if executed["ack_content"] != "":
+                def.var: ackSent
+                    dynamic
+                    SendMessage;
+                        bot
+                        action["channel_id"]
+                        executed["ack_content"]
+                Give: {"handled": TRUE, "command": action["command"], "mode": "action", "ok": TRUE, "result": executed["result"], "ack_send": ackSent, "audit_send": auditSent}
+
+        Give: {"handled": TRUE, "command": action["command"], "mode": "action", "ok": TRUE, "result": executed["result"], "audit_send": auditSent}
+
+    if actionMode != "message":
+        Give: {"handled": FALSE, "reason": "unsupported_action_mode", "mode": actionMode}
+
+    def.var: sent
+        dynamic
+        SendMessage;
+            bot
+            action["channel_id"]
+            action["content"]
+    Give: {"handled": TRUE, "command": action["command"], "send": sent}
+
+def.fun: OpenGatewaySession(bot:dynamic) -> dynamic
     def.var: info
         dynamic
-        http_get;
-            "https://discord.com/api/v10" + "/gateway/bot"
-            ActiveSession["auth"]
+        GatewayInfo;
+            bot
     if not info["ok"]:
+        def.var: infoHasStatus
+            dynamic
+            has_key;
+                info
+                "status"
+        if infoHasStatus:
+            if info["status"] == 401:
+                Give: {"ok": FALSE, "stage": "gateway_info", "fatal": TRUE, "error": "unauthorized", "detail": info}
         Give: info
 
     def.var: details
         dynamic
         json_loads;
             info["body"]
+    def.var: detailsHasUrl
+        dynamic
+        has_key;
+            details
+            "url"
+    if not detailsHasUrl:
+        Give: {"ok": FALSE, "stage": "gateway_info", "error": "gateway url missing"}
 
     def.var: opened
         dynamic
-        ws_connect;
-            details["url"] + "?v=10&encoding=json"
+        GatewayOpen;
+            details["url"]
     if not opened["ok"]:
         Give: opened
 
@@ -742,51 +4156,1284 @@ def.fun: RunActive() -> dynamic
         int
         opened["socket_id"]
 
-    def.var: identify
-        dynamic
-        {"op": 2, "d": {"token": ActiveSession["token"], "intents": ActiveSession["intents"], "properties": {"os": "aether", "browser": "aether", "device": "aether"}}}
-    def.var: identifyText
-        string
-        json_dumps;
-            identify
-    ws_send_text;
-        sid
-        identifyText
-
-    def.var: intervalSeconds
-        float
-        30
     def.var: hello
         dynamic
-        ws_recv_text;
+        {}
+    Do:
+        hello is ws_recv_text_timeout;
             sid
-    if hello["ok"]:
-        def.var: helloEvent
+            10
+    Catch as err:
+        GatewayClose;
+            sid
+        Give: {"ok": FALSE, "stage": "hello_recv", "error": err}
+
+    if not hello["ok"]:
+        GatewayClose;
+            sid
+        Give: {"ok": FALSE, "stage": "hello", "detail": hello}
+
+    def.var: helloEvent
+        dynamic
+        {}
+    Do:
+        helloEvent is json_loads;
+            hello["text"]
+    Catch as err:
+        GatewayClose;
+            sid
+        Give: {"ok": FALSE, "stage": "hello_parse", "error": err}
+
+    def.var: heartbeatSeconds
+        float
+        30
+    if helloEvent["op"] == 10:
+        def.var: helloData
             dynamic
-            json_loads;
-                hello["text"]
-        def.var: helloPacket
+            helloEvent["d"]
+        def.var: helloHasHeartbeat
             dynamic
-            {"ok": TRUE, "socket_id": sid, "raw": hello["text"], "event": helloEvent}
-        if helloPacket["event"]["op"] == 10:
-            def.var: helloData
-                dynamic
-                helloPacket["event"]["d"]
-            def.var: heartbeatInterval
-                float
-                helloData["heartbeat_interval"]
-            intervalSeconds is heartbeatInterval / 1000
+            has_key;
+                helloData
+                "heartbeat_interval"
+        if helloHasHeartbeat:
+            heartbeatSeconds is helloData["heartbeat_interval"] / 1000
+
+    if heartbeatSeconds <= 0:
+        heartbeatSeconds is 30
+
+    def.var: intentsValue
+        int
+        ResolveIntentsValue;
+            bot["intents"]
+    def.var: botHasIntentsValue
+        dynamic
+        has_key;
+            bot
+            "intents_value"
+    if botHasIntentsValue:
+        def.var: resolvedIntentsValue
+            int
+            int;
+                bot["intents_value"]
+        intentsValue is resolvedIntentsValue
+
+    def.var: identified
+        dynamic
+        GatewayIdentify;
+            sid
+            bot["token"]
+            intentsValue
+    if not identified["ok"]:
+        GatewayClose;
+            sid
+        Give: {"ok": FALSE, "stage": "identify", "detail": identified}
+
+    def.var: hasPresenceStatus
+        dynamic
+        has_key;
+            bot
+            "presence_status"
+    def.var: hasPresenceAfk
+        dynamic
+        has_key;
+            bot
+            "presence_afk"
+    def.var: hasPresenceActivities
+        dynamic
+        has_key;
+            bot
+            "presence_activities"
+    if hasPresenceStatus:
+        if hasPresenceAfk:
+            if hasPresenceActivities:
+                GatewaySetPresenceWithActivities;
+                    sid
+                    bot["presence_status"]
+                    bot["presence_activities"]
+                    bot["presence_afk"]
+
+    Give: {"ok": TRUE, "socket_id": sid, "heartbeat_seconds": heartbeatSeconds}
+
+def.fun: RunActive() -> dynamic
+    if ActiveToken == "":
+        flag: "No active Discord token. Call UseToken with token first."
+    if ActiveToken == "YOUR_BOT_TOKEN":
+        flag: "Active token is still placeholder text. Replace YOUR_BOT_TOKEN before running."
+
+    def.var: reconnectDelay
+        float
+        1
 
     Repeat:
-        def.var: heartbeatText
+        def.var: opened
+            dynamic
+            OpenGatewaySession;
+                ActiveSession
+        if not opened["ok"]:
+            def.var: openedHasFatal
+                dynamic
+                has_key;
+                    opened
+                    "fatal"
+            if openedHasFatal:
+                if opened["fatal"]:
+                    flag: "Discord gateway authorization failed (401). Check bot token and bot permissions."
+            time_sleep;
+                reconnectDelay
+            if reconnectDelay < 30:
+                reconnectDelay is reconnectDelay * 2
+                if reconnectDelay > 30:
+                    reconnectDelay is 30
+            NEXT
+
+        reconnectDelay is 1
+
+        def.var: sid
+            int
+            opened["socket_id"]
+        ActiveSession is dict_set;
+            ActiveSession
+            "socket_id"
+            sid
+        def.var: heartbeatSeconds
+            float
+            opened["heartbeat_seconds"]
+        def.var: seq
+            dynamic
+            empty
+        def.var: nextHeartbeat
+            float
+            time_now;
+
+        nextHeartbeat is nextHeartbeat + heartbeatSeconds
+
+        Repeat:
+            def.var: now
+                float
+                time_now;
+            if now >= nextHeartbeat:
+                GatewayHeartbeat;
+                    sid
+                    seq
+                nextHeartbeat is now + heartbeatSeconds
+
+            def.var: packet
+                dynamic
+                {"ok": FALSE}
+            Do:
+                packet is ws_recv_text_timeout;
+                    sid
+                    0.25
+            Catch as err:
+                packet is {"ok": FALSE, "error": err}
+
+            def.var: packetHasTimeout
+                dynamic
+                has_key;
+                    packet
+                    "timeout"
+            if packetHasTimeout:
+                if packet["timeout"]:
+                    NEXT
+
+            if not packet["ok"]:
+                GatewayClose;
+                    sid
+                STOP
+
+            def.var: event
+                dynamic
+                {}
+            Do:
+                event is json_loads;
+                    packet["text"]
+            Catch as err:
+                NEXT
+
+            def.var: eventHasOp
+                dynamic
+                has_key;
+                    event
+                    "op"
+            if not eventHasOp:
+                NEXT
+
+            def.var: eventHasS
+                dynamic
+                has_key;
+                    event
+                    "s"
+            if eventHasS:
+                if event["s"] != empty:
+                    seq is event["s"]
+
+            def.var: opcode
+                int
+                event["op"]
+
+            if opcode == 1:
+                GatewayHeartbeat;
+                    sid
+                    seq
+                NEXT
+
+            if opcode == 7:
+                GatewayClose;
+                    sid
+                STOP
+
+            if opcode == 9:
+                GatewayClose;
+                    sid
+                STOP
+
+            if opcode == 10:
+                def.var: eventHasD
+                    dynamic
+                    has_key;
+                        event
+                        "d"
+                if eventHasD:
+                    def.var: helloData
+                        dynamic
+                        event["d"]
+                    def.var: helloDataHasHeartbeat
+                        dynamic
+                        has_key;
+                            helloData
+                            "heartbeat_interval"
+                    if helloDataHasHeartbeat:
+                        heartbeatSeconds is helloData["heartbeat_interval"] / 1000
+                        if heartbeatSeconds <= 0:
+                            heartbeatSeconds is 30
+                        def.var: nextBase
+                            float
+                            time_now;
+                        nextHeartbeat is nextBase + heartbeatSeconds
+                NEXT
+
+            if opcode == 0:
+                def.var: eventHasT
+                    dynamic
+                    has_key;
+                        event
+                        "t"
+                if eventHasT:
+                    if event["t"] == "READY":
+                        ActiveSession is dict_set;
+                            ActiveSession
+                            "ready"
+                            TRUE
+
+                    if event["t"] == "MESSAGE_CREATE":
+                        def.var: messageHasD
+                            dynamic
+                            has_key;
+                                event
+                                "d"
+                        if messageHasD:
+                            Do:
+                                ProcessMessageCreate;
+                                    ActiveSession
+                                    event["d"]
+                            Catch as err:
+                                NEXT
+
+                NEXT
+
+        time_sleep;
+            reconnectDelay
+        if reconnectDelay < 30:
+            reconnectDelay is reconnectDelay * 2
+            if reconnectDelay > 30:
+                reconnectDelay is 30
+
+def.fun: RunSimpleActive() -> dynamic
+    if ActiveToken == "":
+        flag: "No active Discord token. Call UseToken with token first."
+    if ActiveToken == "YOUR_BOT_TOKEN":
+        flag: "Active token is still placeholder text. Replace YOUR_BOT_TOKEN before running."
+
+    def.var: reconnectDelay
+        float
+        1
+
+    Repeat:
+        def.var: info
+            dynamic
+            http_get;
+                APIBase + "/gateway/bot"
+                ActiveSession["auth"]
+        if not info["ok"]:
+            def.var: infoHasStatus
+                dynamic
+                has_key;
+                    info
+                    "status"
+            if infoHasStatus:
+                if info["status"] == 401:
+                    flag: "Discord gateway authorization failed (401). Check bot token and bot permissions."
+            time_sleep;
+                reconnectDelay
+            if reconnectDelay < 30:
+                reconnectDelay is reconnectDelay * 2
+                if reconnectDelay > 30:
+                    reconnectDelay is 30
+            NEXT
+
+        def.var: details
+            dynamic
+            {}
+        Do:
+            details is json_loads;
+                info["body"]
+        Catch as err:
+            time_sleep;
+                reconnectDelay
+            if reconnectDelay < 30:
+                reconnectDelay is reconnectDelay * 2
+                if reconnectDelay > 30:
+                    reconnectDelay is 30
+            NEXT
+
+        def.var: detailsHasUrl
+            dynamic
+            has_key;
+                details
+                "url"
+        if not detailsHasUrl:
+            time_sleep;
+                reconnectDelay
+            if reconnectDelay < 30:
+                reconnectDelay is reconnectDelay * 2
+                if reconnectDelay > 30:
+                    reconnectDelay is 30
+            NEXT
+
+        def.var: gatewayUrl
+            string
+            details["url"]
+        def.var: endsWithSlash
+            dynamic
+            ends_with;
+                gatewayUrl
+                "/"
+        if endsWithSlash:
+            gatewayUrl is gatewayUrl + "?v=10&encoding=json"
+        otherwise:
+            gatewayUrl is gatewayUrl + "/?v=10&encoding=json"
+
+        def.var: opened
+            dynamic
+            ws_connect;
+                gatewayUrl
+        if not opened["ok"]:
+            time_sleep;
+                reconnectDelay
+            if reconnectDelay < 30:
+                reconnectDelay is reconnectDelay * 2
+                if reconnectDelay > 30:
+                    reconnectDelay is 30
+            NEXT
+
+        reconnectDelay is 1
+
+        def.var: sid
+            int
+            opened["socket_id"]
+        ActiveSession is dict_set;
+            ActiveSession
+            "socket_id"
+            sid
+
+        def.var: hello
+            dynamic
+            {"ok": FALSE}
+        Do:
+            hello is ws_recv_text_timeout;
+                sid
+                10
+        Catch as err:
+            ws_close;
+                sid
+            time_sleep;
+                reconnectDelay
+            if reconnectDelay < 30:
+                reconnectDelay is reconnectDelay * 2
+                if reconnectDelay > 30:
+                    reconnectDelay is 30
+            NEXT
+
+        if not hello["ok"]:
+            ws_close;
+                sid
+            time_sleep;
+                reconnectDelay
+            if reconnectDelay < 30:
+                reconnectDelay is reconnectDelay * 2
+                if reconnectDelay > 30:
+                    reconnectDelay is 30
+            NEXT
+
+        def.var: helloEvent
+            dynamic
+            {}
+        Do:
+            helloEvent is json_loads;
+                hello["text"]
+        Catch as err:
+            ws_close;
+                sid
+            time_sleep;
+                reconnectDelay
+            if reconnectDelay < 30:
+                reconnectDelay is reconnectDelay * 2
+                if reconnectDelay > 30:
+                    reconnectDelay is 30
+            NEXT
+
+        def.var: heartbeatSeconds
+            float
+            30
+        def.var: helloHasOp
+            dynamic
+            has_key;
+                helloEvent
+                "op"
+        if helloHasOp:
+            if helloEvent["op"] == 10:
+                def.var: helloHasD
+                    dynamic
+                    has_key;
+                        helloEvent
+                        "d"
+                if helloHasD:
+                    def.var: helloData
+                        dynamic
+                        helloEvent["d"]
+                    def.var: helloDataHasHeartbeat
+                        dynamic
+                        has_key;
+                            helloData
+                            "heartbeat_interval"
+                    if helloDataHasHeartbeat:
+                        heartbeatSeconds is helloData["heartbeat_interval"] / 1000
+
+        if heartbeatSeconds <= 0:
+            heartbeatSeconds is 30
+
+        def.var: intentsValue
+            int
+            33281
+        def.var: hasIntentsValue
+            dynamic
+            has_key;
+                ActiveSession
+                "intents_value"
+        if hasIntentsValue:
+            def.var: parsedIntentsValue
+                int
+                int;
+                    ActiveSession["intents_value"]
+            intentsValue is parsedIntentsValue
+
+        def.var: identify
+            dynamic
+            {"op": 2, "d": {"token": ActiveSession["token"], "intents": intentsValue, "properties": {"os": "aether", "browser": "aether", "device": "aether"}}}
+        def.var: identifyText
             string
             json_dumps;
-                {"op": 1, "d": 0}
-        ws_send_text;
-            sid
-            heartbeatText
+                identify
+        def.var: identified
+            dynamic
+            ws_send_text;
+                sid
+                identifyText
+        if not identified["ok"]:
+            ws_close;
+                sid
+            time_sleep;
+                reconnectDelay
+            if reconnectDelay < 30:
+                reconnectDelay is reconnectDelay * 2
+                if reconnectDelay > 30:
+                    reconnectDelay is 30
+            NEXT
+
+        def.var: appliedPresence
+            dynamic
+            ApplyPresenceActive;
+                sid
+        if not appliedPresence["ok"]:
+            ws_close;
+                sid
+            time_sleep;
+                reconnectDelay
+            if reconnectDelay < 30:
+                reconnectDelay is reconnectDelay * 2
+                if reconnectDelay > 30:
+                    reconnectDelay is 30
+            NEXT
+
+        def.var: seq
+            dynamic
+            empty
+        def.var: nextHeartbeat
+            float
+            time_now;
+        nextHeartbeat is nextHeartbeat + heartbeatSeconds
+
+        Repeat:
+            def.var: now
+                float
+                time_now;
+            if now >= nextHeartbeat:
+                def.var: heartbeat
+                    dynamic
+                    {"op": 1, "d": seq}
+                def.var: heartbeatText
+                    string
+                    json_dumps;
+                        heartbeat
+                def.var: heartbeatSent
+                    dynamic
+                    ws_send_text;
+                        sid
+                        heartbeatText
+                if not heartbeatSent["ok"]:
+                    ws_close;
+                        sid
+                    STOP
+                nextHeartbeat is now + heartbeatSeconds
+
+            def.var: packet
+                dynamic
+                {"ok": FALSE}
+            Do:
+                packet is ws_recv_text_timeout;
+                    sid
+                    0.25
+            Catch as err:
+                packet is {"ok": FALSE, "error": err}
+
+            def.var: packetHasTimeout
+                dynamic
+                has_key;
+                    packet
+                    "timeout"
+            if packetHasTimeout:
+                if packet["timeout"]:
+                    NEXT
+
+            if not packet["ok"]:
+                ws_close;
+                    sid
+                STOP
+
+            def.var: event
+                dynamic
+                {}
+            Do:
+                event is json_loads;
+                    packet["text"]
+            Catch as err:
+                NEXT
+
+            def.var: eventHasOp
+                dynamic
+                has_key;
+                    event
+                    "op"
+            if not eventHasOp:
+                NEXT
+
+            def.var: eventHasS
+                dynamic
+                has_key;
+                    event
+                    "s"
+            if eventHasS:
+                if event["s"] != empty:
+                    seq is event["s"]
+
+            def.var: opcode
+                int
+                event["op"]
+
+            if opcode == 1:
+                def.var: heartbeat
+                    dynamic
+                    {"op": 1, "d": seq}
+                def.var: heartbeatText
+                    string
+                    json_dumps;
+                        heartbeat
+                def.var: heartbeatSent
+                    dynamic
+                    ws_send_text;
+                        sid
+                        heartbeatText
+                if not heartbeatSent["ok"]:
+                    ws_close;
+                        sid
+                    STOP
+                NEXT
+
+            if opcode == 7:
+                ws_close;
+                    sid
+                STOP
+
+            if opcode == 9:
+                ws_close;
+                    sid
+                STOP
+
+            if opcode == 10:
+                def.var: eventHasD
+                    dynamic
+                    has_key;
+                        event
+                        "d"
+                if eventHasD:
+                    def.var: helloData
+                        dynamic
+                        event["d"]
+                    def.var: helloDataHasHeartbeat
+                        dynamic
+                        has_key;
+                            helloData
+                            "heartbeat_interval"
+                    if helloDataHasHeartbeat:
+                        heartbeatSeconds is helloData["heartbeat_interval"] / 1000
+                        if heartbeatSeconds <= 0:
+                            heartbeatSeconds is 30
+                        def.var: nextBase
+                            float
+                            time_now;
+                        nextHeartbeat is nextBase + heartbeatSeconds
+                NEXT
+
+            if opcode != 0:
+                NEXT
+
+            def.var: eventHasT
+                dynamic
+                has_key;
+                    event
+                    "t"
+            if not eventHasT:
+                NEXT
+
+            if event["t"] == "READY":
+                ActiveSession is dict_set;
+                    ActiveSession
+                    "ready"
+                    TRUE
+                NEXT
+
+            if event["t"] != "MESSAGE_CREATE":
+                NEXT
+
+            def.var: messageHasD
+                dynamic
+                has_key;
+                    event
+                    "d"
+            if not messageHasD:
+                NEXT
+
+            def.var: payload
+                dynamic
+                event["d"]
+
+            Do:
+                ProcessMessageCreate;
+                    ActiveSession
+                    payload
+            Catch as err:
+                NEXT
+            NEXT
+
+            def.var: hasContent
+                dynamic
+                has_key;
+                    payload
+                    "content"
+            if not hasContent:
+                NEXT
+
+            def.var: hasChannelId
+                dynamic
+                has_key;
+                    payload
+                    "channel_id"
+            if not hasChannelId:
+                NEXT
+
+            def.var: hasAuthor
+                dynamic
+                has_key;
+                    payload
+                    "author"
+            if hasAuthor:
+                def.var: author
+                    dynamic
+                    payload["author"]
+                def.var: authorHasBot
+                    dynamic
+                    has_key;
+                        author
+                        "bot"
+                if authorHasBot:
+                    if author["bot"]:
+                        NEXT
+
+            def.var: prefix
+                string
+                ActiveSession["prefix"]
+            def.var: startsWithPrefix
+                dynamic
+                starts_with;
+                    payload["content"]
+                    prefix
+            if not startsWithPrefix:
+                NEXT
+
+            def.var: prefixLen
+                int
+                len;
+                    prefix
+            def.var: sliced
+                string
+                slice;
+                    payload["content"]
+                    prefixLen
+                    empty
+            def.var: raw
+                string
+                trim;
+                    sliced
+            if raw == "":
+                NEXT
+
+            def.var: parts
+                list
+                split;
+                    raw
+            def.var: partCount
+                int
+                len;
+                    parts
+            def.var: commandName
+                string
+                lower;
+                    parts[0]
+            def.var: args
+                dynamic
+                []
+            if partCount > 1:
+                args is slice;
+                    parts
+                    1
+                    empty
+
+            def.var: matched
+                boolean
+                FALSE
+            def.var: mode
+                string
+                ""
+            def.var: responseTemplate
+                string
+                ""
+            def.var: actionSpec
+                dynamic
+                {}
+
+            Repeat for cmd in ActiveSession["commands"]:
+                def.var: cmdNameLower
+                    string
+                    lower;
+                        cmd["name"]
+                if cmdNameLower == commandName:
+                    def.var: cmdHasResponse
+                        dynamic
+                        has_key;
+                            cmd
+                            "response"
+                    if cmdHasResponse:
+                        matched is TRUE
+                        mode is "message"
+                        responseTemplate is string;
+                            cmd["response"]
+
+                    def.var: cmdHasAction
+                        dynamic
+                        has_key;
+                            cmd
+                            "action"
+                    if cmdHasAction:
+                        matched is TRUE
+                        mode is "action"
+                        actionSpec is cmd["action"]
+
+            if not matched:
+                NEXT
+
+            if mode == "message":
+                def.var: responseContent
+                    string
+                    responseTemplate
+                def.var: argCount
+                    int
+                    len;
+                        args
+
+                if argCount > 0:
+                    def.var: arg0
+                        string
+                        string;
+                            args[0]
+                    responseContent is replace;
+                        responseContent
+                        "{0}"
+                        arg0
+
+                if argCount > 1:
+                    def.var: arg1
+                        string
+                        string;
+                            args[1]
+                    responseContent is replace;
+                        responseContent
+                        "{1}"
+                        arg1
+
+                if argCount > 2:
+                    def.var: arg2
+                        string
+                        string;
+                            args[2]
+                    responseContent is replace;
+                        responseContent
+                        "{2}"
+                        arg2
+
+                if argCount > 3:
+                    def.var: arg3
+                        string
+                        string;
+                            args[3]
+                    responseContent is replace;
+                        responseContent
+                        "{3}"
+                        arg3
+
+                if argCount > 4:
+                    def.var: arg4
+                        string
+                        string;
+                            args[4]
+                    responseContent is replace;
+                        responseContent
+                        "{4}"
+                        arg4
+
+                def.var: sendRoute
+                    string
+                    APIBase + "/channels/" + payload["channel_id"] + "/messages"
+                Do:
+                    http_post_json;
+                        sendRoute
+                        {"content": responseContent}
+                        ActiveSession["auth"]
+                Catch as err:
+                    NEXT
+                NEXT
+
+            if mode != "action":
+                NEXT
+
+            def.var: actionHasType
+                dynamic
+                has_key;
+                    actionSpec
+                    "type"
+            if not actionHasType:
+                NEXT
+
+            def.var: actionType
+                string
+                lower;
+                    actionSpec["type"]
+            def.var: argsCount
+                int
+                len;
+                    args
+            def.var: ackContent
+                string
+                ""
+            def.var: executedOk
+                boolean
+                FALSE
+
+            if actionType == "create_text_channel":
+                def.var: guildId
+                    string
+                    ""
+                def.var: specHasGuildId
+                    dynamic
+                    has_key;
+                        actionSpec
+                        "guild_id"
+                if specHasGuildId:
+                    guildId is actionSpec["guild_id"]
+                otherwise:
+                    def.var: payloadHasGuildId
+                        dynamic
+                        has_key;
+                            payload
+                            "guild_id"
+                    if payloadHasGuildId:
+                        guildId is payload["guild_id"]
+
+                if guildId != "":
+                    def.var: channelName
+                        string
+                        "new-channel"
+                    def.var: specHasName
+                        dynamic
+                        has_key;
+                            actionSpec
+                            "name"
+                    if specHasName:
+                        channelName is actionSpec["name"]
+                    otherwise:
+                        if argsCount > 0:
+                            channelName is args[0]
+
+                    def.var: topic
+                        string
+                        ""
+                    def.var: specHasTopic
+                        dynamic
+                        has_key;
+                            actionSpec
+                            "topic"
+                    if specHasTopic:
+                        topic is actionSpec["topic"]
+
+                    def.var: createRoute
+                        string
+                        APIBase + "/guilds/" + guildId + "/channels"
+                    def.var: created
+                        dynamic
+                        http_post_json;
+                            createRoute
+                            {"name": channelName, "type": 0, "topic": topic}
+                            ActiveSession["auth"]
+                    executedOk is created["ok"]
+                    ackContent is "Created channel " + channelName
+                    def.var: specHasAck
+                        dynamic
+                        has_key;
+                            actionSpec
+                            "ack"
+                    if specHasAck:
+                        ackContent is actionSpec["ack"]
+
+            if actionType == "delete_channel":
+                def.var: targetChannelId
+                    string
+                    ""
+                def.var: specHasChannelId
+                    dynamic
+                    has_key;
+                        actionSpec
+                        "channel_id"
+                if specHasChannelId:
+                    targetChannelId is actionSpec["channel_id"]
+                otherwise:
+                    if argsCount > 0:
+                        targetChannelId is args[0]
+
+                if targetChannelId != "":
+                    def.var: deleteRoute
+                        string
+                        APIBase + "/channels/" + targetChannelId
+                    def.var: deleted
+                        dynamic
+                        http_delete;
+                            deleteRoute
+                            ActiveSession["auth"]
+                    executedOk is deleted["ok"]
+                    ackContent is "Deleted channel " + targetChannelId
+                    def.var: specHasAck
+                        dynamic
+                        has_key;
+                            actionSpec
+                            "ack"
+                    if specHasAck:
+                        ackContent is actionSpec["ack"]
+
+            if actionType == "create_role":
+                def.var: guildId
+                    string
+                    ""
+                def.var: specHasGuildId
+                    dynamic
+                    has_key;
+                        actionSpec
+                        "guild_id"
+                if specHasGuildId:
+                    guildId is actionSpec["guild_id"]
+                otherwise:
+                    def.var: payloadHasGuildId
+                        dynamic
+                        has_key;
+                            payload
+                            "guild_id"
+                    if payloadHasGuildId:
+                        guildId is payload["guild_id"]
+
+                if guildId != "":
+                    def.var: roleName
+                        string
+                        "new-role"
+                    def.var: specHasName
+                        dynamic
+                        has_key;
+                            actionSpec
+                            "name"
+                    if specHasName:
+                        roleName is actionSpec["name"]
+                    otherwise:
+                        if argsCount > 0:
+                            roleName is args[0]
+
+                    def.var: permissions
+                        string
+                        "0"
+                    def.var: specHasPermissions
+                        dynamic
+                        has_key;
+                            actionSpec
+                            "permissions"
+                    if specHasPermissions:
+                        permissions is actionSpec["permissions"]
+
+                    def.var: color
+                        int
+                        0
+                    def.var: specHasColor
+                        dynamic
+                        has_key;
+                            actionSpec
+                            "color"
+                    if specHasColor:
+                        def.var: parsedColor
+                            int
+                            int;
+                                actionSpec["color"]
+                        color is parsedColor
+
+                    def.var: hoist
+                        boolean
+                        FALSE
+                    def.var: specHasHoist
+                        dynamic
+                        has_key;
+                            actionSpec
+                            "hoist"
+                    if specHasHoist:
+                        hoist is actionSpec["hoist"]
+
+                    def.var: mentionable
+                        boolean
+                        FALSE
+                    def.var: specHasMentionable
+                        dynamic
+                        has_key;
+                            actionSpec
+                            "mentionable"
+                    if specHasMentionable:
+                        mentionable is actionSpec["mentionable"]
+
+                    def.var: createRoleRoute
+                        string
+                        APIBase + "/guilds/" + guildId + "/roles"
+                    def.var: createdRole
+                        dynamic
+                        http_post_json;
+                            createRoleRoute
+                            {"name": roleName, "permissions": permissions, "color": color, "hoist": hoist, "mentionable": mentionable}
+                            ActiveSession["auth"]
+                    executedOk is createdRole["ok"]
+                    ackContent is "Created role " + roleName
+                    def.var: specHasAck
+                        dynamic
+                        has_key;
+                            actionSpec
+                            "ack"
+                    if specHasAck:
+                        ackContent is actionSpec["ack"]
+
+            if actionType == "ban_member":
+                def.var: guildId
+                    string
+                    ""
+                def.var: specHasGuildId
+                    dynamic
+                    has_key;
+                        actionSpec
+                        "guild_id"
+                if specHasGuildId:
+                    guildId is actionSpec["guild_id"]
+                otherwise:
+                    def.var: payloadHasGuildId
+                        dynamic
+                        has_key;
+                            payload
+                            "guild_id"
+                    if payloadHasGuildId:
+                        guildId is payload["guild_id"]
+
+                def.var: userId
+                    string
+                    ""
+                def.var: specHasUserId
+                    dynamic
+                    has_key;
+                        actionSpec
+                        "user_id"
+                if specHasUserId:
+                    userId is actionSpec["user_id"]
+                otherwise:
+                    if argsCount > 0:
+                        userId is args[0]
+
+                if guildId != "":
+                    if userId != "":
+                        def.var: deleteMessageSeconds
+                            int
+                            0
+                        def.var: specHasDeleteSeconds
+                            dynamic
+                            has_key;
+                                actionSpec
+                                "delete_message_seconds"
+                        if specHasDeleteSeconds:
+                            def.var: parsedDeleteSeconds
+                                int
+                                int;
+                                    actionSpec["delete_message_seconds"]
+                            deleteMessageSeconds is parsedDeleteSeconds
+
+                        def.var: banRoute
+                            string
+                            APIBase + "/guilds/" + guildId + "/bans/" + userId
+                        def.var: banned
+                            dynamic
+                            http_put_json;
+                                banRoute
+                                {"delete_message_seconds": deleteMessageSeconds}
+                                ActiveSession["auth"]
+                        executedOk is banned["ok"]
+                        ackContent is "Banned member " + userId
+                        def.var: specHasAck
+                            dynamic
+                            has_key;
+                                actionSpec
+                                "ack"
+                        if specHasAck:
+                            ackContent is actionSpec["ack"]
+
+            if actionType == "api_post":
+                def.var: hasRoute
+                    dynamic
+                    has_key;
+                        actionSpec
+                        "route"
+                if hasRoute:
+                    def.var: apiRoute
+                        string
+                        string;
+                            actionSpec["route"]
+                    def.var: routeStartsWithSlash
+                        dynamic
+                        starts_with;
+                            apiRoute
+                            "/"
+                    if routeStartsWithSlash:
+                        apiRoute is APIBase + apiRoute
+
+                    def.var: apiPayload
+                        dynamic
+                        {}
+                    def.var: hasPayload
+                        dynamic
+                        has_key;
+                            actionSpec
+                            "payload"
+                    if hasPayload:
+                        apiPayload is actionSpec["payload"]
+
+                    def.var: posted
+                        dynamic
+                        http_post_json;
+                            apiRoute
+                            apiPayload
+                            ActiveSession["auth"]
+                    executedOk is posted["ok"]
+                    ackContent is "Action sent."
+                    def.var: specHasAck
+                        dynamic
+                        has_key;
+                            actionSpec
+                            "ack"
+                    if specHasAck:
+                        ackContent is actionSpec["ack"]
+
+            if executedOk:
+                if ackContent != "":
+                    def.var: ackRoute
+                        string
+                        APIBase + "/channels/" + payload["channel_id"] + "/messages"
+                    Do:
+                        http_post_json;
+                            ackRoute
+                            {"content": ackContent}
+                            ActiveSession["auth"]
+                    Catch as err:
+                        NEXT
+
+            NEXT
+
         time_sleep;
-            intervalSeconds
+            reconnectDelay
+        if reconnectDelay < 30:
+            reconnectDelay is reconnectDelay * 2
+            if reconnectDelay > 30:
+                reconnectDelay is 30
+
+def.fun: Run(bot:dynamic) -> dynamic
+    def.var: selected
+        dynamic
+        UseBot;
+            bot
+    def.var: running
+        dynamic
+        RunActive;
+    Give: running
+
+def.fun: Start(bot:dynamic) -> dynamic
+    def.var: running
+        dynamic
+        Run;
+            bot
+    Give: running
 
 def.fun: Session() -> dynamic
     if ActiveToken == "":
@@ -799,6 +5446,9 @@ def.fun: IsSessionReady() -> boolean
 def.fun: ClearSession() -> dynamic
     ActiveToken is ""
     ActiveSession is {}
+    ActivePresenceStatus is "online"
+    ActivePresenceAfk is FALSE
+    ActivePresenceActivities is []
     Give: empty
 
 def.fun: SendWith(tokenOrBot:dynamic, channelId:string, content:string) -> dynamic
@@ -868,6 +5518,41 @@ def.fun: SendEmbed(channelId:string, title:string, description:string, color:int
             ActiveSession["auth"]
     Give: result
 
+def.fun: SendButtonsWith(tokenOrBot:dynamic, channelId:string, content:string, buttons:dynamic) -> dynamic
+    def.var: payload
+        dynamic
+        {"content": content, "components": [{"type": 1, "components": buttons}]}
+    def.var: tokenType
+        string
+        typeOf;
+            tokenOrBot
+    if tokenType == "string":
+        def.var: result
+            dynamic
+            http_post_json;
+                "https://discord.com/api/v10" + "/channels/" + channelId + "/messages"
+                payload
+                "Bot " + tokenOrBot
+        Give: result
+    def.var: result
+        dynamic
+        http_post_json;
+            "https://discord.com/api/v10" + "/channels/" + channelId + "/messages"
+            payload
+            tokenOrBot["auth"]
+    Give: result
+
+def.fun: SendButtons(channelId:string, content:string, buttons:dynamic) -> dynamic
+    if ActiveToken == "":
+        flag: "No active Discord token. Call UseToken with token first."
+    def.var: result
+        dynamic
+        http_post_json;
+            "https://discord.com/api/v10" + "/channels/" + channelId + "/messages"
+            {"content": content, "components": [{"type": 1, "components": buttons}]}
+            ActiveSession["auth"]
+    Give: result
+
 def.fun: DMWith(tokenOrBot:dynamic, userId:string, content:string) -> dynamic
     def.var: tokenType
         string
@@ -923,7 +5608,7 @@ def.fun: Verify(token:string) -> dynamic
 def.fun: FetchChannel(bot:dynamic, channelId:string) -> dynamic
     def.var: result
         dynamic
-        discord.GetChannel;
+        GetChannel;
             bot
             channelId
     Give: result
@@ -931,7 +5616,7 @@ def.fun: FetchChannel(bot:dynamic, channelId:string) -> dynamic
 def.fun: FetchMessage(bot:dynamic, channelId:string, messageId:string) -> dynamic
     def.var: result
         dynamic
-        discord.GetMessage;
+        GetMessage;
             bot
             channelId
             messageId
