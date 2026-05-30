@@ -3550,6 +3550,326 @@ def.fun: ExecuteCommandAction(bot:dynamic, commandAction:dynamic) -> dynamic
 
         Give: {"ok": banned["ok"], "result": banned, "ack_content": ack}
 
+    if actionType == "kick_member":
+        def.var: guildId
+            string
+            ""
+        def.var: specHasGuildId
+            dynamic
+            has_key;
+                actionSpec
+                "guild_id"
+        if specHasGuildId:
+            guildId is actionSpec["guild_id"]
+        otherwise:
+            def.var: payloadHasGuildId
+                dynamic
+                has_key;
+                    payload
+                    "guild_id"
+            if payloadHasGuildId:
+                guildId is payload["guild_id"]
+
+        if guildId != "":
+            guildId is ApplyArgPlaceholders;
+                guildId
+                args
+
+        if guildId == "":
+            Give: {"ok": FALSE, "error": "guild_id missing for kick_member"}
+
+        def.var: userId
+            string
+            ""
+        def.var: specHasUserId
+            dynamic
+            has_key;
+                actionSpec
+                "user_id"
+        if specHasUserId:
+            userId is actionSpec["user_id"]
+        otherwise:
+            if argsCount > 0:
+                userId is args[0]
+
+        if userId != "":
+            userId is ApplyArgPlaceholders;
+                userId
+                args
+
+        if userId == "":
+            Give: {"ok": FALSE, "error": "user_id missing for kick_member"}
+
+        def.var: kicked
+            dynamic
+            KickMember;
+                bot
+                guildId
+                userId
+
+        def.var: ack
+            string
+            "Kicked member " + userId
+        def.var: specHasAck
+            dynamic
+            has_key;
+                actionSpec
+                "ack"
+        if specHasAck:
+            ack is actionSpec["ack"]
+
+        ack is ApplyArgPlaceholders;
+            ack
+            args
+
+        Give: {"ok": kicked["ok"], "result": kicked, "ack_content": ack}
+
+    if actionType == "unban_member":
+        def.var: guildId
+            string
+            ""
+        def.var: specHasGuildId
+            dynamic
+            has_key;
+                actionSpec
+                "guild_id"
+        if specHasGuildId:
+            guildId is actionSpec["guild_id"]
+        otherwise:
+            def.var: payloadHasGuildId
+                dynamic
+                has_key;
+                    payload
+                    "guild_id"
+            if payloadHasGuildId:
+                guildId is payload["guild_id"]
+
+        if guildId != "":
+            guildId is ApplyArgPlaceholders;
+                guildId
+                args
+
+        if guildId == "":
+            Give: {"ok": FALSE, "error": "guild_id missing for unban_member"}
+
+        def.var: userId
+            string
+            ""
+        def.var: specHasUserId
+            dynamic
+            has_key;
+                actionSpec
+                "user_id"
+        if specHasUserId:
+            userId is actionSpec["user_id"]
+        otherwise:
+            if argsCount > 0:
+                userId is args[0]
+
+        if userId != "":
+            userId is ApplyArgPlaceholders;
+                userId
+                args
+
+        if userId == "":
+            Give: {"ok": FALSE, "error": "user_id missing for unban_member"}
+
+        def.var: unbanned
+            dynamic
+            UnbanMember;
+                bot
+                guildId
+                userId
+
+        def.var: ack
+            string
+            "Unbanned member " + userId
+        def.var: specHasAck
+            dynamic
+            has_key;
+                actionSpec
+                "ack"
+        if specHasAck:
+            ack is actionSpec["ack"]
+
+        ack is ApplyArgPlaceholders;
+            ack
+            args
+
+        Give: {"ok": unbanned["ok"], "result": unbanned, "ack_content": ack}
+
+    if actionType == "timeout_member":
+        def.var: guildId
+            string
+            ""
+        def.var: specHasGuildId
+            dynamic
+            has_key;
+                actionSpec
+                "guild_id"
+        if specHasGuildId:
+            guildId is actionSpec["guild_id"]
+        otherwise:
+            def.var: payloadHasGuildId
+                dynamic
+                has_key;
+                    payload
+                    "guild_id"
+            if payloadHasGuildId:
+                guildId is payload["guild_id"]
+
+        if guildId != "":
+            guildId is ApplyArgPlaceholders;
+                guildId
+                args
+
+        if guildId == "":
+            Give: {"ok": FALSE, "error": "guild_id missing for timeout_member"}
+
+        def.var: userId
+            string
+            ""
+        def.var: specHasUserId
+            dynamic
+            has_key;
+                actionSpec
+                "user_id"
+        if specHasUserId:
+            userId is actionSpec["user_id"]
+        otherwise:
+            if argsCount > 0:
+                userId is args[0]
+
+        if userId != "":
+            userId is ApplyArgPlaceholders;
+                userId
+                args
+
+        if userId == "":
+            Give: {"ok": FALSE, "error": "user_id missing for timeout_member"}
+
+        def.var: untilIso
+            string
+            ""
+        def.var: specHasUntilIso
+            dynamic
+            has_key;
+                actionSpec
+                "until_iso"
+        if specHasUntilIso:
+            untilIso is string;
+                actionSpec["until_iso"]
+        otherwise:
+            if argsCount > 1:
+                untilIso is string;
+                    args[1]
+
+        untilIso is ApplyArgPlaceholders;
+            untilIso
+            args
+
+        if untilIso == "":
+            Give: {"ok": FALSE, "error": "until_iso missing for timeout_member"}
+
+        def.var: timedOut
+            dynamic
+            TimeoutMember;
+                bot
+                guildId
+                userId
+                untilIso
+
+        def.var: ack
+            string
+            "Timed out member " + userId
+        def.var: specHasAck
+            dynamic
+            has_key;
+                actionSpec
+                "ack"
+        if specHasAck:
+            ack is actionSpec["ack"]
+
+        ack is ApplyArgPlaceholders;
+            ack
+            args
+
+        Give: {"ok": timedOut["ok"], "result": timedOut, "ack_content": ack}
+
+    if actionType == "remove_timeout":
+        def.var: guildId
+            string
+            ""
+        def.var: specHasGuildId
+            dynamic
+            has_key;
+                actionSpec
+                "guild_id"
+        if specHasGuildId:
+            guildId is actionSpec["guild_id"]
+        otherwise:
+            def.var: payloadHasGuildId
+                dynamic
+                has_key;
+                    payload
+                    "guild_id"
+            if payloadHasGuildId:
+                guildId is payload["guild_id"]
+
+        if guildId != "":
+            guildId is ApplyArgPlaceholders;
+                guildId
+                args
+
+        if guildId == "":
+            Give: {"ok": FALSE, "error": "guild_id missing for remove_timeout"}
+
+        def.var: userId
+            string
+            ""
+        def.var: specHasUserId
+            dynamic
+            has_key;
+                actionSpec
+                "user_id"
+        if specHasUserId:
+            userId is actionSpec["user_id"]
+        otherwise:
+            if argsCount > 0:
+                userId is args[0]
+
+        if userId != "":
+            userId is ApplyArgPlaceholders;
+                userId
+                args
+
+        if userId == "":
+            Give: {"ok": FALSE, "error": "user_id missing for remove_timeout"}
+
+        def.var: unmuted
+            dynamic
+            RemoveTimeout;
+                bot
+                guildId
+                userId
+
+        def.var: ack
+            string
+            "Removed timeout for member " + userId
+        def.var: specHasAck
+            dynamic
+            has_key;
+                actionSpec
+                "ack"
+        if specHasAck:
+            ack is actionSpec["ack"]
+
+        ack is ApplyArgPlaceholders;
+            ack
+            args
+
+        Give: {"ok": unmuted["ok"], "result": unmuted, "ack_content": ack}
+
     if actionType == "send_embed":
         def.var: targetChannelId
             string
