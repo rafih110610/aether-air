@@ -4318,6 +4318,155 @@ def.fun: ExecuteCommandAction(bot:dynamic, commandAction:dynamic) -> dynamic
 
         Give: {"ok": TRUE, "result": {"latency_ms": ActiveGatewayLatencyMs}, "ack_content": pingText}
 
+    if actionType == "send_dm":
+        def.var: userId
+            string
+            ""
+        def.var: hasUserId
+            dynamic
+            has_key;
+                actionSpec
+                "user_id"
+        if hasUserId:
+            userId is string;
+                actionSpec["user_id"]
+        otherwise:
+            if argsCount > 0:
+                userId is string;
+                    args[0]
+
+        userId is ApplyArgPlaceholders;
+            userId
+            args
+        userId is NormalizeUserReference;
+            userId
+
+        if userId == "":
+            Give: {"ok": FALSE, "error": "user_id missing for send_dm"}
+
+        def.var: content
+            string
+            ""
+        def.var: hasContent
+            dynamic
+            has_key;
+                actionSpec
+                "content"
+        if hasContent:
+            content is string;
+                actionSpec["content"]
+        otherwise:
+            content is "Message from Angela."
+
+        content is ApplyArgPlaceholders;
+            content
+            args
+
+        def.var: sent
+            dynamic
+            SendDM;
+                bot
+                userId
+                content
+
+        def.var: allowFailure
+            boolean
+            FALSE
+        def.var: hasAllowFailure
+            dynamic
+            has_key;
+                actionSpec
+                "allow_failure"
+        if hasAllowFailure:
+            allowFailure is actionSpec["allow_failure"]
+
+        if not sent["ok"]:
+            if allowFailure:
+                Give: {"ok": TRUE, "result": sent, "ack_content": ""}
+            Give: {"ok": FALSE, "error": "send_dm failed", "result": sent, "error_user": "I could not DM that user."}
+
+        def.var: ack
+            string
+            ""
+        def.var: hasAck
+            dynamic
+            has_key;
+                actionSpec
+                "ack"
+        if hasAck:
+            ack is string;
+                actionSpec["ack"]
+            ack is ApplyArgPlaceholders;
+                ack
+                args
+
+        Give: {"ok": TRUE, "result": sent, "ack_content": ack}
+
+    if actionType == "run_actions":
+        def.var: hasActions
+            dynamic
+            has_key;
+                actionSpec
+                "actions"
+        if not hasActions:
+            Give: {"ok": FALSE, "error": "actions missing for run_actions"}
+
+        def.var: actionsList
+            dynamic
+            actionSpec["actions"]
+        def.var: actionCount
+            int
+            len;
+                actionsList
+        if actionCount == 0:
+            Give: {"ok": FALSE, "error": "actions empty for run_actions"}
+
+        def.var: lastResult
+            dynamic
+            {}
+        def.var: finalAck
+            string
+            ""
+
+        Repeat for childAction in actionsList:
+            def.var: childCommand
+                dynamic
+                {"action": childAction, "args": args, "payload": payload, "channel_id": commandAction["channel_id"]}
+
+            def.var: childExecuted
+                dynamic
+                ExecuteCommandAction;
+                    bot
+                    childCommand
+
+            if not childExecuted["ok"]:
+                Give: childExecuted
+
+            lastResult is childExecuted["result"]
+
+            def.var: childHasAck
+                dynamic
+                has_key;
+                    childExecuted
+                    "ack_content"
+            if childHasAck:
+                if childExecuted["ack_content"] != "":
+                    finalAck is childExecuted["ack_content"]
+
+        def.var: hasAck
+            dynamic
+            has_key;
+                actionSpec
+                "ack"
+        if hasAck:
+            finalAck is string;
+                actionSpec["ack"]
+            finalAck is ApplyArgPlaceholders;
+                finalAck
+                args
+
+        Give: {"ok": TRUE, "result": lastResult, "ack_content": finalAck}
+
     if actionType == "append_file_log":
         def.var: logPath
             string
