@@ -2680,6 +2680,43 @@ def.fun: NormalizeUserReference(rawValue:string) -> string
 
     Give: cleaned
 
+def.fun: NormalizeRoleReference(rawValue:string) -> string
+    def.var: cleaned
+        string
+        trim;
+            rawValue
+
+    def.var: cleanedLen
+        int
+        len;
+            cleaned
+
+    if cleanedLen >= 5:
+        def.var: isRoleMention
+            dynamic
+            starts_with;
+                cleaned
+                "<@&"
+        def.var: hasClosing
+            dynamic
+            ends_with;
+                cleaned
+                ">"
+        if isRoleMention:
+            if hasClosing:
+                def.var: endIndex
+                    int
+                    cleanedLen - 1
+                def.var: roleInner
+                    string
+                    slice;
+                        cleaned
+                        3
+                        endIndex
+                Give: roleInner
+
+    Give: cleaned
+
 def.fun: ReplaceDynamicPlaceholders(value:dynamic, args:dynamic) -> dynamic
     def.var: valueKind
         string
@@ -3569,6 +3606,208 @@ def.fun: ExecuteCommandAction(bot:dynamic, commandAction:dynamic) -> dynamic
             args
 
         Give: {"ok": created["ok"], "result": created, "ack_content": ack}
+
+    if actionType == "add_member_role":
+        def.var: guildId
+            string
+            ""
+        def.var: specHasGuildId
+            dynamic
+            has_key;
+                actionSpec
+                "guild_id"
+        if specHasGuildId:
+            guildId is actionSpec["guild_id"]
+        otherwise:
+            def.var: payloadHasGuildId
+                dynamic
+                has_key;
+                    payload
+                    "guild_id"
+            if payloadHasGuildId:
+                guildId is payload["guild_id"]
+
+        if guildId != "":
+            guildId is ApplyArgPlaceholders;
+                guildId
+                args
+
+        if guildId == "":
+            Give: {"ok": FALSE, "error": "guild_id missing for add_member_role"}
+
+        def.var: userId
+            string
+            ""
+        def.var: specHasUserId
+            dynamic
+            has_key;
+                actionSpec
+                "user_id"
+        if specHasUserId:
+            userId is string;
+                actionSpec["user_id"]
+        otherwise:
+            if argsCount > 0:
+                userId is string;
+                    args[0]
+        userId is ApplyArgPlaceholders;
+            userId
+            args
+        userId is NormalizeUserReference;
+            userId
+
+        if userId == "":
+            Give: {"ok": FALSE, "error": "user_id missing for add_member_role"}
+
+        def.var: roleId
+            string
+            ""
+        def.var: specHasRoleId
+            dynamic
+            has_key;
+                actionSpec
+                "role_id"
+        if specHasRoleId:
+            roleId is string;
+                actionSpec["role_id"]
+        otherwise:
+            if argsCount > 1:
+                roleId is string;
+                    args[1]
+        roleId is ApplyArgPlaceholders;
+            roleId
+            args
+        roleId is NormalizeRoleReference;
+            roleId
+
+        if roleId == "":
+            Give: {"ok": FALSE, "error": "role_id missing for add_member_role"}
+
+        def.var: updated
+            dynamic
+            AddGuildMemberRole;
+                bot
+                guildId
+                userId
+                roleId
+
+        def.var: ack
+            string
+            "Added role " + roleId + " to " + userId
+        def.var: specHasAck
+            dynamic
+            has_key;
+                actionSpec
+                "ack"
+        if specHasAck:
+            ack is string;
+                actionSpec["ack"]
+        ack is ApplyArgPlaceholders;
+            ack
+            args
+
+        Give: {"ok": updated["ok"], "result": updated, "ack_content": ack}
+
+    if actionType == "remove_member_role":
+        def.var: guildId
+            string
+            ""
+        def.var: specHasGuildId
+            dynamic
+            has_key;
+                actionSpec
+                "guild_id"
+        if specHasGuildId:
+            guildId is actionSpec["guild_id"]
+        otherwise:
+            def.var: payloadHasGuildId
+                dynamic
+                has_key;
+                    payload
+                    "guild_id"
+            if payloadHasGuildId:
+                guildId is payload["guild_id"]
+
+        if guildId != "":
+            guildId is ApplyArgPlaceholders;
+                guildId
+                args
+
+        if guildId == "":
+            Give: {"ok": FALSE, "error": "guild_id missing for remove_member_role"}
+
+        def.var: userId
+            string
+            ""
+        def.var: specHasUserId
+            dynamic
+            has_key;
+                actionSpec
+                "user_id"
+        if specHasUserId:
+            userId is string;
+                actionSpec["user_id"]
+        otherwise:
+            if argsCount > 0:
+                userId is string;
+                    args[0]
+        userId is ApplyArgPlaceholders;
+            userId
+            args
+        userId is NormalizeUserReference;
+            userId
+
+        if userId == "":
+            Give: {"ok": FALSE, "error": "user_id missing for remove_member_role"}
+
+        def.var: roleId
+            string
+            ""
+        def.var: specHasRoleId
+            dynamic
+            has_key;
+                actionSpec
+                "role_id"
+        if specHasRoleId:
+            roleId is string;
+                actionSpec["role_id"]
+        otherwise:
+            if argsCount > 1:
+                roleId is string;
+                    args[1]
+        roleId is ApplyArgPlaceholders;
+            roleId
+            args
+        roleId is NormalizeRoleReference;
+            roleId
+
+        if roleId == "":
+            Give: {"ok": FALSE, "error": "role_id missing for remove_member_role"}
+
+        def.var: updated
+            dynamic
+            RemoveGuildMemberRole;
+                bot
+                guildId
+                userId
+                roleId
+
+        def.var: ack
+            string
+            "Removed role " + roleId + " from " + userId
+        def.var: specHasAck
+            dynamic
+            has_key;
+                actionSpec
+                "ack"
+        if specHasAck:
+            ack is string;
+                actionSpec["ack"]
+        ack is ApplyArgPlaceholders;
+            ack
+            args
+
+        Give: {"ok": updated["ok"], "result": updated, "ack_content": ack}
 
     if actionType == "ban_member":
         def.var: guildId
