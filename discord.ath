@@ -5147,9 +5147,89 @@ def.fun: ProcessMessageCreate(bot:dynamic, payload:dynamic) -> dynamic
                 "ack_content"
         if hasAckContent:
             if executed["ack_content"] != "":
+                def.var: sendAckAsEmbed
+                    boolean
+                    FALSE
+
+                def.var: actionHasType
+                    dynamic
+                    has_key;
+                        action["action"]
+                        "type"
+                if actionHasType:
+                    def.var: actionType
+                        string
+                        lower;
+                            string(action["action"]["type"])
+                    if actionType != "read_file_tail":
+                        sendAckAsEmbed is TRUE
+
+                def.var: actionHasAckEmbed
+                    dynamic
+                    has_key;
+                        action["action"]
+                        "ack_embed"
+                if actionHasAckEmbed:
+                    sendAckAsEmbed is action["action"]["ack_embed"]
+
                 def.var: ackSent
                     dynamic
-                    SendMessage;
+                    {}
+
+                if sendAckAsEmbed:
+                    def.var: ackTitle
+                        string
+                        "Angela | " + action["command"]
+                    def.var: actionHasAckTitle
+                        dynamic
+                        has_key;
+                            action["action"]
+                            "ack_title"
+                    if actionHasAckTitle:
+                        ackTitle is string;
+                            action["action"]["ack_title"]
+                        ackTitle is ApplyArgPlaceholders;
+                            ackTitle
+                            action["args"]
+
+                    def.var: ackColor
+                        int
+                        3447003
+                    def.var: actionHasAckColor
+                        dynamic
+                        has_key;
+                            action["action"]
+                            "ack_color"
+                    if actionHasAckColor:
+                        def.var: rawAckColor
+                            string
+                            string;
+                                action["action"]["ack_color"]
+                        rawAckColor is ApplyArgPlaceholders;
+                            rawAckColor
+                            action["args"]
+                        Do:
+                            def.var: parsedAckColor
+                                int
+                                int;
+                                    rawAckColor
+                            ackColor is parsedAckColor
+                        Catch as err:
+                            ackColor is 3447003
+
+                    def.var: ackEmbed
+                        dynamic
+                        BuildEmbed;
+                            ackTitle
+                            executed["ack_content"]
+                            ackColor
+                    ackSent is SendEmbedMessage;
+                        bot
+                        action["channel_id"]
+                        ackEmbed
+
+                otherwise:
+                    ackSent is SendMessage;
                         bot
                         action["channel_id"]
                         executed["ack_content"]
