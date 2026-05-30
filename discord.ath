@@ -37,6 +37,14 @@ def.var: ActivePlaceholderContext
     dynamic
     {}
 
+def.var: ActiveHeartbeatSentAt
+    float
+    0
+
+def.var: ActiveGatewayLatencyMs
+    int
+    -1
+
 def.fun: IntentsDefault() -> dynamic
     Give: {"guilds": TRUE, "guild_messages": TRUE, "direct_messages": TRUE, "message_content": FALSE, "guild_members": FALSE, "guild_presences": FALSE, "typing": FALSE, "reactions": TRUE}
 
@@ -449,6 +457,7 @@ def.fun: GatewayIdentify(socketId:int, token:string, intents:int) -> dynamic
     Give: sendResult
 
 def.fun: GatewayHeartbeat(socketId:int, seq:dynamic) -> dynamic
+    ActiveHeartbeatSentAt is time_now;
     def.var: heartbeat
         dynamic
         {"op": 1, "d": seq}
@@ -1676,9 +1685,11 @@ def.fun: BuildHelpCatalog(bot:dynamic) -> dynamic
 def.fun: BuildHelpText(bot:dynamic, categoryFilter:string) -> string
     def.var: requestedCategory
         string
-        lower;
-            trim;
-                categoryFilter
+        categoryFilter
+    requestedCategory is trim;
+        requestedCategory
+    requestedCategory is lower;
+        requestedCategory
 
     def.var: lines
         dynamic
@@ -1769,9 +1780,108 @@ def.fun: BuildHelpText(bot:dynamic, categoryFilter:string) -> string
             Give: "No commands registered."
         Give: "No commands in category: " + requestedCategory
 
-    Give: join;
+    def.var: rendered
+        string
+        join;
+            lines
+            "\n"
+    Give: rendered
+
+def.fun: BuildHelpOverviewText(bot:dynamic, prefix:string) -> string
+    def.var: catalog
+        dynamic
+        BuildHelpCatalog;
+            bot
+
+    def.var: total
+        int
+        len;
+            catalog
+
+    def.var: categories
+        dynamic
+        []
+    def.var: counts
+        dynamic
+        {}
+
+    Repeat for entry in catalog:
+        def.var: category
+            string
+            "general"
+        def.var: hasCategory
+            dynamic
+            has_key;
+                entry
+                "category"
+        if hasCategory:
+            category is lower;
+                string(entry["category"])
+
+        def.var: hasListedCategory
+            dynamic
+            contains;
+                categories
+                category
+        if not hasListedCategory:
+            categories is append;
+                categories
+                category
+
+        def.var: currentCount
+            int
+            0
+        def.var: hasCount
+            dynamic
+            has_key;
+                counts
+                category
+        if hasCount:
+            currentCount is int;
+                counts[category]
+
+        currentCount is currentCount + 1
+        counts is dict_set;
+            counts
+            category
+            currentCount
+
+    def.var: lines
+        dynamic
+        []
+    lines is append;
         lines
-        "\n"
+        "Total commands: " + string(total)
+    lines is append;
+        lines
+        "Use " + prefix + "help <category>"
+
+    Repeat for categoryName in categories:
+        def.var: categoryCount
+            int
+            0
+        def.var: hasCategoryCount
+            dynamic
+            has_key;
+                counts
+                categoryName
+        if hasCategoryCount:
+            categoryCount is int;
+                counts[categoryName]
+
+        def.var: categoryLine
+            string
+            "- " + categoryName + " (" + string(categoryCount) + ")"
+        lines is append;
+            lines
+            categoryLine
+
+    def.var: rendered
+        string
+        join;
+            lines
+            "\n"
+    Give: rendered
 
 def.fun: SetPresenceActive(status:string, activities:dynamic, afk:boolean) -> dynamic
     if ActiveToken == "":
@@ -3575,9 +3685,10 @@ def.fun: ExecuteCommandAction(bot:dynamic, commandAction:dynamic) -> dynamic
             helpCategory is ApplyArgPlaceholders;
                 helpCategory
                 args
+            helpCategory is trim;
+                helpCategory
             helpCategory is lower;
-                trim;
-                    helpCategory
+                helpCategory
 
         def.var: helpTitle
             string
@@ -3654,6 +3765,111 @@ def.fun: ExecuteCommandAction(bot:dynamic, commandAction:dynamic) -> dynamic
                 args
 
         Give: {"ok": sent["ok"], "result": sent, "ack_content": ack}
+
+    if actionType == "help_overview":
+        def.var: targetChannelId
+            string
+            commandAction["channel_id"]
+        def.var: specHasChannelId
+            dynamic
+            has_key;
+                actionSpec
+                "channel_id"
+        if specHasChannelId:
+            targetChannelId is actionSpec["channel_id"]
+
+        targetChannelId is ApplyArgPlaceholders;
+            targetChannelId
+            args
+
+        if targetChannelId == "":
+            Give: {"ok": FALSE, "error": "channel_id missing for help_overview"}
+
+        def.var: title
+            string
+            "Command Categories"
+        def.var: hasTitle
+            dynamic
+            has_key;
+                actionSpec
+                "title"
+        if hasTitle:
+            title is string;
+                actionSpec["title"]
+            title is ApplyArgPlaceholders;
+                title
+                args
+
+        def.var: color
+            int
+            3447003
+        def.var: hasColor
+            dynamic
+            has_key;
+                actionSpec
+                "color"
+        if hasColor:
+            def.var: rawColor
+                string
+                string;
+                    actionSpec["color"]
+            rawColor is ApplyArgPlaceholders;
+                rawColor
+                args
+            Do:
+                def.var: parsedColor
+                    int
+                    int;
+                        rawColor
+                color is parsedColor
+            Catch as err:
+                color is 3447003
+
+        def.var: overviewText
+            string
+            BuildHelpOverviewText;
+                bot
+                bot["prefix"]
+
+        def.var: overviewEmbed
+            dynamic
+            BuildEmbed;
+                title
+                overviewText
+                color
+
+        def.var: sent
+            dynamic
+            SendEmbedMessage;
+                bot
+                targetChannelId
+                overviewEmbed
+
+        Give: {"ok": sent["ok"], "result": sent, "ack_content": ""}
+
+    if actionType == "ping":
+        def.var: label
+            string
+            "Pong"
+        def.var: hasLabel
+            dynamic
+            has_key;
+                actionSpec
+                "label"
+        if hasLabel:
+            label is string;
+                actionSpec["label"]
+            label is ApplyArgPlaceholders;
+                label
+                args
+
+        def.var: pingText
+            string
+            "Gateway latency not ready yet."
+        if ActiveGatewayLatencyMs >= 0:
+            pingText is label + "! " + string(ActiveGatewayLatencyMs) + "ms"
+
+        Give: {"ok": TRUE, "result": {"latency_ms": ActiveGatewayLatencyMs}, "ack_content": pingText}
 
     if actionType == "append_file_log":
         def.var: logPath
@@ -4299,6 +4515,7 @@ def.fun: RunActive() -> dynamic
         def.var: heartbeatSeconds
             float
             opened["heartbeat_seconds"]
+        ActiveGatewayLatencyMs is -1
         def.var: seq
             dynamic
             empty
@@ -4376,6 +4593,23 @@ def.fun: RunActive() -> dynamic
                 GatewayHeartbeat;
                     sid
                     seq
+                NEXT
+
+            if opcode == 11:
+                if ActiveHeartbeatSentAt > 0:
+                    def.var: ackNow
+                        float
+                        time_now;
+                    def.var: elapsedMsFloat
+                        float
+                        (ackNow - ActiveHeartbeatSentAt) * 1000
+                    def.var: elapsedMs
+                        int
+                        int;
+                            elapsedMsFloat
+                    if elapsedMs < 0:
+                        elapsedMs is 0
+                    ActiveGatewayLatencyMs is elapsedMs
                 NEXT
 
             if opcode == 7:
@@ -4679,6 +4913,7 @@ def.fun: RunSimpleActive() -> dynamic
         def.var: seq
             dynamic
             empty
+        ActiveGatewayLatencyMs is -1
         def.var: nextHeartbeat
             float
             time_now;
@@ -4689,18 +4924,11 @@ def.fun: RunSimpleActive() -> dynamic
                 float
                 time_now;
             if now >= nextHeartbeat:
-                def.var: heartbeat
-                    dynamic
-                    {"op": 1, "d": seq}
-                def.var: heartbeatText
-                    string
-                    json_dumps;
-                        heartbeat
                 def.var: heartbeatSent
                     dynamic
-                    ws_send_text;
+                    GatewayHeartbeat;
                         sid
-                        heartbeatText
+                        seq
                 if not heartbeatSent["ok"]:
                     ws_close;
                         sid
@@ -4762,22 +4990,32 @@ def.fun: RunSimpleActive() -> dynamic
                 event["op"]
 
             if opcode == 1:
-                def.var: heartbeat
-                    dynamic
-                    {"op": 1, "d": seq}
-                def.var: heartbeatText
-                    string
-                    json_dumps;
-                        heartbeat
                 def.var: heartbeatSent
                     dynamic
-                    ws_send_text;
+                    GatewayHeartbeat;
                         sid
-                        heartbeatText
+                        seq
                 if not heartbeatSent["ok"]:
                     ws_close;
                         sid
                     STOP
+                NEXT
+
+            if opcode == 11:
+                if ActiveHeartbeatSentAt > 0:
+                    def.var: ackNow
+                        float
+                        time_now;
+                    def.var: elapsedMsFloat
+                        float
+                        (ackNow - ActiveHeartbeatSentAt) * 1000
+                    def.var: elapsedMs
+                        int
+                        int;
+                            elapsedMsFloat
+                    if elapsedMs < 0:
+                        elapsedMs is 0
+                    ActiveGatewayLatencyMs is elapsedMs
                 NEXT
 
             if opcode == 7:
