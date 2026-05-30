@@ -2628,6 +2628,58 @@ def.fun: ApplyArgPlaceholders(template:string, args:dynamic) -> string
 
     Give: output
 
+def.fun: NormalizeUserReference(rawValue:string) -> string
+    def.var: cleaned
+        string
+        trim;
+            rawValue
+
+    def.var: cleanedLen
+        int
+        len;
+            cleaned
+
+    if cleanedLen >= 4:
+        def.var: isMention
+            dynamic
+            starts_with;
+                cleaned
+                "<@"
+        def.var: hasClosing
+            dynamic
+            ends_with;
+                cleaned
+                ">"
+        if isMention:
+            if hasClosing:
+                def.var: endIndex
+                    int
+                    cleanedLen - 1
+
+                def.var: isNickMention
+                    dynamic
+                    starts_with;
+                        cleaned
+                        "<@!"
+                if isNickMention:
+                    def.var: nickInner
+                        string
+                        slice;
+                            cleaned
+                            3
+                            endIndex
+                    Give: nickInner
+
+                def.var: standardInner
+                    string
+                    slice;
+                        cleaned
+                        2
+                        endIndex
+                Give: standardInner
+
+    Give: cleaned
+
 def.fun: ReplaceDynamicPlaceholders(value:dynamic, args:dynamic) -> dynamic
     def.var: valueKind
         string
@@ -3564,6 +3616,8 @@ def.fun: ExecuteCommandAction(bot:dynamic, commandAction:dynamic) -> dynamic
             userId is ApplyArgPlaceholders;
                 userId
                 args
+            userId is NormalizeUserReference;
+                userId
 
         if userId == "":
             Give: {"ok": FALSE, "error": "user_id missing for ban_member"}
@@ -3661,6 +3715,8 @@ def.fun: ExecuteCommandAction(bot:dynamic, commandAction:dynamic) -> dynamic
             userId is ApplyArgPlaceholders;
                 userId
                 args
+            userId is NormalizeUserReference;
+                userId
 
         if userId == "":
             Give: {"ok": FALSE, "error": "user_id missing for kick_member"}
@@ -3735,6 +3791,8 @@ def.fun: ExecuteCommandAction(bot:dynamic, commandAction:dynamic) -> dynamic
             userId is ApplyArgPlaceholders;
                 userId
                 args
+            userId is NormalizeUserReference;
+                userId
 
         if userId == "":
             Give: {"ok": FALSE, "error": "user_id missing for unban_member"}
@@ -3809,6 +3867,8 @@ def.fun: ExecuteCommandAction(bot:dynamic, commandAction:dynamic) -> dynamic
             userId is ApplyArgPlaceholders;
                 userId
                 args
+            userId is NormalizeUserReference;
+                userId
 
         if userId == "":
             Give: {"ok": FALSE, "error": "user_id missing for timeout_member"}
@@ -3834,7 +3894,7 @@ def.fun: ExecuteCommandAction(bot:dynamic, commandAction:dynamic) -> dynamic
             args
 
         if untilIso == "":
-            Give: {"ok": FALSE, "error": "until_iso missing for timeout_member"}
+            Give: {"ok": FALSE, "error": "until_iso missing for timeout_member", "error_user": "Mute expects an ISO UTC timestamp (example: 2026-06-01T12:00:00.000Z)."}
 
         def.var: timedOut
             dynamic
@@ -3907,6 +3967,8 @@ def.fun: ExecuteCommandAction(bot:dynamic, commandAction:dynamic) -> dynamic
             userId is ApplyArgPlaceholders;
                 userId
                 args
+            userId is NormalizeUserReference;
+                userId
 
         if userId == "":
             Give: {"ok": FALSE, "error": "user_id missing for remove_timeout"}
