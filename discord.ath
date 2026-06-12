@@ -28,50 +28,63 @@ var GatewayURL string = "wss://gateway.discord.gg/?v=10&encoding=json"
 fun Get
     path
     token
-    give http_get API + path "Bot " + token
+    var url string = API + path
+    var auth string = "Bot " + token
+    give http_get url auth
 
 fun Post
     path
     token
     body
-    give http_post_json API + path body "Bot " + token
+    var url string = API + path
+    var auth string = "Bot " + token
+    give http_post_json url body auth
 
 fun Put
     path
     token
     body
-    give http_put_json API + path body "Bot " + token
+    var url string = API + path
+    var auth string = "Bot " + token
+    give http_put_json url body auth
 
 fun Patch
     path
     token
     body
-    give http_patch_json API + path body "Bot " + token
+    var url string = API + path
+    var auth string = "Bot " + token
+    give http_patch_json url body auth
 
 fun Delete
     path
     token
-    give http_delete API + path "Bot " + token
+    var url string = API + path
+    var auth string = "Bot " + token
+    give http_delete url auth
 
 #! ---- message actions ----
 fun Send
     token
     channelId
     content
-    give Post "/channels/" + channelId + "/messages" token {"content": content}
+    var path string = "/channels/" + channelId + "/messages"
+    give Post path token {"content": content}
 
 fun Reply
     token
     channelId
     messageId
     content
-    give Post "/channels/" + channelId + "/messages" token {"content": content, "message_reference": {"message_id": messageId}}
+    var path string = "/channels/" + channelId + "/messages"
+    give Post path token {"content": content, "message_reference": {"message_id": messageId}}
 
 fun SendEmbed
     token
     channelId
     embed
-    give Post "/channels/" + channelId + "/messages" token {"embeds": [embed]}
+    var path string = "/channels/" + channelId + "/messages"
+    give Post path token {"embeds": [embed]}
 
 fun MakeEmbed
     title
@@ -84,20 +97,23 @@ fun Edit
     channelId
     messageId
     content
-    give Patch "/channels/" + channelId + "/messages/" + messageId token {"content": content}
+    var path string = "/channels/" + channelId + "/messages/" + messageId
+    give Patch path token {"content": content}
 
 fun DeleteMsg
     token
     channelId
     messageId
-    give Delete "/channels/" + channelId + "/messages/" + messageId token
+    var path string = "/channels/" + channelId + "/messages/" + messageId
+    give Delete path token
 
 fun React
     token
     channelId
     messageId
     emoji
-    give Put "/channels/" + channelId + "/messages/" + messageId + "/reactions/" + emoji + "/@me" token {}
+    var path string = "/channels/" + channelId + "/messages/" + messageId + "/reactions/" + emoji + "/@me"
+    give Put path token {}
 
 fun SendDM
     token
@@ -194,7 +210,8 @@ fun Identify
     token
     socketId
     var payload dynamic = {"op": 2, "d": {"token": token, "intents": 33281, "properties": {"os": "linux", "browser": "aether", "device": "aether"}}}
-    WsSend socketId json_dumps payload
+    var payloadStr string = json_dumps payload
+    WsSend socketId payloadStr
 
 fun SetPresence
     token
@@ -248,51 +265,99 @@ fun HandleMessage
 
     #! check prefix
     if prefix != empty
-        if len content >= len prefix
-            if content[0 len prefix] == prefix
-                var rest string = content[len prefix len content]
+        if len(content) >= len(prefix)
+            if content[:len(prefix)] == prefix
+                var rest string = content[len(prefix):]
                 var parts dynamic = split rest " "
                 var cmd string = parts[0]
                 var args dynamic = {}
-                if len parts > 1
-                    args is parts[1 len parts]
+                if len(parts) > 1
+                    args is parts[1:]
                 RunCommand bot token msg cmd args
                 give empty
 
     #! call user handler
-    CallEvent bot "message" msg token
+    CallEvent bot "message" msg
 
 fun HandleInteraction
     bot
     token
     interaction
     var cmdData dynamic = interaction.data
-    if cmdData != empty
-        var name string = cmdData.name
-        var args dynamic = cmdData.options
-        var opts dynamic = {}
-        if args != empty
-            repeat item in args
-                opts[item.name] is item.value
+    if cmdData == empty
+        give empty
+    var hasName dynamic = has_key cmdData "name"
+    var hasCustom dynamic = has_key cmdData "custom_id"
+
+    #! ---- handle button clicks ----
+    if hasCustom
+        var customId string = cmdData.custom_id
+
+        #! beta_apply ticket button
+        if customId == "beta_apply"
+            Do:
+                #! reply with type 4 + flags:64 — sends a NEW ephemeral message (blue, user-only)
+                var callbackPath string = "/interactions/" + interaction.id + "/" + interaction.token + "/callback"
+                Post callbackPath token {"type": 4, "data": {"content": "⏳ Setting up your ticket...", "flags": 64}}
+
+                var member dynamic = interaction.member
+                var userName string = member.user.username
+                var guildId string = interaction.guild_id
+                var appId string = interaction.application_id
+                var categoryId string = "1514824741536530502"
+                var chanName string = "beta-" + userName
+                var chanPayload dynamic = {"name": chanName, "type": 0, "parent_id": categoryId}
+                var chanPath string = "/guilds/" + guildId + "/channels"
+                var chanResp dynamic = Post chanPath token chanPayload
+                var chanData dynamic = json_loads chanResp.body
+                var welcome string = "🌸 Welcome " + userName + "!\n\nThank you for your interest in Beta Testing. Please tell us:\n- Why you want to join\n- Your experience level\n- Any relevant background\n\nA staff member will review your application shortly."
+                var greetPath string = "/channels/" + chanData.id + "/messages"
+                Post greetPath bot.token {"content": welcome}
+                #! update the ephemeral followup to show the channel link
+                var doneMsg string = "✅ Ticket opened in <#" + chanData.id + ">"
+                var followPath string = "/webhooks/" + appId + "/" + interaction.token + "/messages/@original"
+                Patch followPath bot.token {"content": doneMsg}
+            Catch as err:
+                say "   ❌ Ticket error: " + err
+            give empty
+
+        CallEvent bot "interaction" interaction
+        give empty
+
+    #! ---- handle unknown interactions (no name) ----
+    if not hasName
         Acknowledge token interaction
-        RunCommand bot token interaction name opts
+        give empty
+
+    #! ---- slash commands ----
+    var name string = cmdData.name
+    var args dynamic = cmdData.options
+    var opts dynamic = {}
+    if args != empty
+        repeat item in args
+            opts[item.name] is item.value
+    Acknowledge token interaction
+    RunCommand bot token interaction name opts
 
 fun Acknowledge
     token
     interaction
-    Post "/interactions/" + interaction.id + "/" + interaction.token + "/callback" token {"type": 5}
+    var path string = "/interactions/" + interaction.id + "/" + interaction.token + "/callback"
+    Post path token {"type": 5}
 
 fun InteractionReply
     token
     interaction
     content
-    Post "/interactions/" + interaction.id + "/" + interaction.token + "/callback" token {"type": 4, "data": {"content": content}}
+    var path string = "/interactions/" + interaction.id + "/" + interaction.token + "/callback"
+    Post path token {"type": 4, "data": {"content": content}}
 
 fun InteractionEmbed
     token
     interaction
     embed
-    Post "/interactions/" + interaction.id + "/" + interaction.token + "/callback" token {"type": 4, "data": {"embeds": [embed]}}
+    var path string = "/interactions/" + interaction.id + "/" + interaction.token + "/callback"
+    Post path token {"type": 4, "data": {"embeds": [embed]}}
 
 fun RunCommand
     bot
@@ -302,7 +367,13 @@ fun RunCommand
     args
     #! built-ins
     if cmd == "ping"
-        ReplyTo token source "🏓 Pong!"
+        var start float = time_perf_counter
+        var pingUrl string = API + "/users/@me"
+        var pingAuth string = "Bot " + token
+        http_get pingUrl pingAuth
+        var end float = time_perf_counter
+        var ms int = (end - start) * 1000.0
+        ReplyTo token source "Pong! (" + ms + "ms)"
         give empty
     or cmd == "help"
         var cmds string = ""
@@ -311,7 +382,8 @@ fun RunCommand
             if cmds != empty
                 cmds is cmds + ", "
             cmds is cmds + "`" + k + "`"
-        ReplyTo token source "Commands: " + cmds
+        var helpMsg string = "Commands: " + cmds
+        ReplyTo token source helpMsg
         give empty
 
     #! user commands
@@ -331,7 +403,8 @@ fun RunCommand
 
         ReplyTo token source "Command has no action"
     otherwise
-        ReplyTo token source "Unknown: `" + cmd + "`"
+        var unknownMsg string = "Unknown: `" + cmd + "`"
+        ReplyTo token source unknownMsg
 
 fun ReplyTo
     token
@@ -346,10 +419,15 @@ fun CallEvent
     bot
     event
     args
-    extra
-    var handler dynamic = bot.handlers[event]
-    if handler != empty
-        handler bot args extra
+    var extra string = ""
+    var handlers dynamic = bot.handlers
+    var keysList dynamic = keys handlers
+    var found string = ""
+    repeat k in keysList
+        if k == event
+            found is handlers[k]
+    if found != empty and found != ""
+        call_func found bot args extra
 
 #! ==============================
 #! 🎯  QUICKBOT API (high level)
@@ -367,27 +445,40 @@ fun AddCommand
     name
     description
     handler
-    bot.commands[name] is {"description": description, "handler": handler}
+    var _cmds4 dynamic = bot.commands
+    _cmds4[name] is {"description": description, "handler": handler}
+    bot.commands is _cmds4
+    give bot
 
 #! Add an event handler
 fun On
     bot
     event
     handler
-    bot.handlers[event] is handler
+    var _handlers2 dynamic = bot.handlers
+    _handlers2[event] is handler
+    bot.handlers is _handlers2
+    give bot
 
 #! Start the bot
 fun Run
     bot
     say "🤖 Connecting to Discord..."
-    var socketId int = ws_connect GatewayURL
-    var info dynamic = json_loads WsRecvTimeout socketId 10
+    var conn dynamic = ws_connect GatewayURL
+    var socketId int = conn.socket_id
+    var infoResp dynamic = WsRecvTimeout socketId 10
+    if infoResp.ok != true
+        say "   ⏱️ Timeout waiting for Gateway hello"
+        give empty
+    var infoText string = infoResp.text
+    var info dynamic = json_loads infoText
     bot._socketId is socketId
 
     #! identify
     var intents int = 33281
     var identify dynamic = {"op": 2, "d": {"token": bot.token, "intents": intents, "properties": {"os": "linux", "browser": "aether", "device": "aether"}}}
-    WsSend socketId json_dumps identify
+    var identifyStr string = json_dumps identify
+    WsSend socketId identifyStr
 
     var heartbeatInterval float = 0
     var seq int = 0
@@ -395,7 +486,12 @@ fun Run
     #! main event loop
     say "🤖 Bot running — press Ctrl+C to stop"
     repeat
-        var raw string = WsRecvTimeout socketId 60
+        var resp dynamic = WsRecvTimeout socketId 60
+        if resp.ok != true
+            next
+        var raw string = resp.text
+        if raw == empty
+            next
         var event dynamic = json_loads raw
         var op int = event.op
         seq is event.s
@@ -403,6 +499,7 @@ fun Run
         if op == 0
             var t string = event.t
             var d dynamic = event.d
+
 
             if t == "READY"
                 bot.user is d.user
@@ -420,10 +517,10 @@ fun Run
 
             or t == "GUILD_MEMBER_ADD"
                 CallEvent bot "member_join" d
-
         or op == 1
             var hb dynamic = {"op": 1, "d": seq}
-            WsSend socketId json_dumps hb
+            var hbStr string = json_dumps hb
+            WsSend socketId hbStr
 
         or op == 7 or op == 9
             say "🔄 Reconnecting..."
@@ -436,7 +533,8 @@ fun Run
         #! heartbeat
         if heartbeatInterval > 0
             var hbPayload dynamic = {"op": 1, "d": seq}
-            WsSend socketId json_dumps hbPayload
+            var hbPayloadStr string = json_dumps hbPayload
+            WsSend socketId hbPayloadStr
 
 #! ==============================
 #! 🧩  PUZZLE SYSTEM (cog-like command groups)
@@ -456,20 +554,21 @@ fun Run
 fun LoadPuzzles
     bot
     dir
-    say "📦 Loading puzzles from " + dir + "..."
-    var files dynamic = os_listdir dir
+    say "Loading puzzles from " + dir + "..."
+    var files dynamic = os_list_dir dir
     if files == empty
         say "   (no puzzle files found)"
         give empty
 
     repeat file in files
-        if len file < 4
+        var fileLen int = len(file)
+        if fileLen < 4
             next
-        var ext string = file[len file - 4 len file]
+        var ext string = file[fileLen - 4:fileLen]
         if ext != ".ath"
             next
         var path string = dir + "/" + file
-        var name string = file[0 len file - 4]
+        var name string = file[0:fileLen - 4]
         say "   🧩 " + name
         LoadPuzzle bot path name
 
@@ -488,7 +587,7 @@ fun ParsePuzzle
     lines
     puzzleName
     var i int = 0
-    var total int = len lines
+    var total int = len(lines)
     var currentCmd string = ""
     var currentDesc string = ""
     var currentBody string = ""
@@ -504,13 +603,13 @@ fun ParsePuzzle
         #! skip comments and blanks
         if trimmed == ""
             next
-        if len trimmed >= 2
-            if trimmed[0 1] == "#!"
+        if len(trimmed) >= 2
+            if trimmed[:2] == "#!"
                 next
 
         #! puzzle header
-        if len trimmed >= 7
-            if trimmed[0 6] == "puzzle "
+        if len(trimmed) >= 7
+            if trimmed[:7] == "puzzle "
                 next
 
         #! end of puzzle
@@ -518,21 +617,26 @@ fun ParsePuzzle
             break
 
         #! command declaration
-        if len trimmed >= 8
-            if trimmed[0 7] == "command "
-                var rest string = trim trimmed[8 len trimmed]
+        if len(trimmed) >= 8
+            if trimmed[:8] == "command "
+                var rest string = trim trimmed[8:]
                 var parts dynamic = split rest " "
-                if len parts >= 1
-                    currentCmd is parts[0]
+                if len(parts) >= 1
+                    var rawCmd string = parts[0]
+                    var cmdLen int = len(rawCmd)
+                    if cmdLen >= 2
+                        if rawCmd[:1] == "\""
+                            rawCmd is rawCmd[1:cmdLen - 1]
+                    currentCmd is rawCmd
                     currentDesc is ""
-                    if len parts >= 2
-                        currentDesc is parts[1 len parts]
+                    if len(parts) >= 2
+                        currentDesc is parts[1:]
                 next
 
         #! reply body
-        if len trimmed >= 6
-            if trimmed[0 5] == "reply "
-                var content string = trim trimmed[6 len trimmed]
+        if len(trimmed) >= 6
+            if trimmed[:6] == "reply "
+                var content string = trim trimmed[6:]
                 RegisterPuzzleCommand bot puzzleName currentCmd currentDesc content
                 next
 
@@ -545,7 +649,9 @@ fun RegisterPuzzleCommand
     replyContent
     var fullName string = cmd
     var command dynamic = {"description": desc, "puzzle": puzzle, "reply": replyContent}
-    bot.commands[fullName] is command
+    var _cmds2 dynamic = bot.commands
+    _cmds2[fullName] is command
+    bot.commands is _cmds2
 
 #! ==============================
 #! 🚀  ZERO-BOILERPLATE BOT API
@@ -554,8 +660,10 @@ fun RegisterPuzzleCommand
 #! Create a bot from environment — reads DISCORD_TOKEN, DISCORD_PREFIX
 fun BotFromEnv
     var token string = os_getenv "DISCORD_TOKEN" ""
-    if token == empty
-        say "❌ Set DISCORD_TOKEN in .glo or .env"
+    if token == empty or token == ""
+        token is os_getenv "BOT_TOKEN" ""
+    if token == empty or token == ""
+        say "❌ Set DISCORD_TOKEN or BOT_TOKEN in .glo or .env"
         process_exit 1
     var prefix string = os_getenv "DISCORD_PREFIX" "!"
     give QuickBot token prefix
@@ -593,18 +701,18 @@ fun MsgHasPrefix
     msg
     prefix
     var content string = msg.content
-    if len content < len prefix
+    if len(content) < len(prefix)
         give false
-    give content[0 len prefix] == prefix
+    give content[:len(prefix)] == prefix
 
 #! Get command from prefixed message
 fun MsgCommand
     msg
     prefix
     var content string = msg.content
-    var rest string = content[len prefix len content]
+    var rest string = content[len(prefix):]
     var parts dynamic = split rest " "
-    if len parts == 0
+    if len(parts) == 0
         give ""
     give parts[0]
 
@@ -619,4 +727,6 @@ fun SimpleCommand
     desc
     reply
     var cmd dynamic = {"description": desc, "reply": reply}
-    bot.commands[name] is cmd
+    var _cmds3 dynamic = bot.commands
+    _cmds3[name] is cmd
+    bot.commands is _cmds3

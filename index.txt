@@ -6,4 +6,4 @@ random|./random.ath|Pseudo-random number utilities
 time|./time.ath|Time, sleep, and clock helpers
 json|./json.ath|JSON encode/decode and file helpers
 math|./math.ath|Core math functions and constants
-discord|./discord.ath|Published via air
+discord|./discord.ath|Native Discord bot library with ticket system, ephemeral interactions, and button support
