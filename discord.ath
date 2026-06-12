@@ -289,38 +289,8 @@ fun HandleInteraction
     var hasName dynamic = has_key cmdData "name"
     var hasCustom dynamic = has_key cmdData "custom_id"
 
-    #! ---- handle button clicks ----
+    #! ---- dispatch ALL custom_id interactions to user code ----
     if hasCustom
-        var customId string = cmdData.custom_id
-
-        #! beta_apply ticket button
-        if customId == "beta_apply"
-            Do:
-                #! reply with type 4 + flags:64 — sends a NEW ephemeral message (blue, user-only)
-                var callbackPath string = "/interactions/" + interaction.id + "/" + interaction.token + "/callback"
-                Post callbackPath token {"type": 4, "data": {"content": "⏳ Setting up your ticket...", "flags": 64}}
-
-                var member dynamic = interaction.member
-                var userName string = member.user.username
-                var guildId string = interaction.guild_id
-                var appId string = interaction.application_id
-                var categoryId string = "1514824741536530502"
-                var chanName string = "beta-" + userName
-                var chanPayload dynamic = {"name": chanName, "type": 0, "parent_id": categoryId}
-                var chanPath string = "/guilds/" + guildId + "/channels"
-                var chanResp dynamic = Post chanPath token chanPayload
-                var chanData dynamic = json_loads chanResp.body
-                var welcome string = "🌸 Welcome " + userName + "!\n\nThank you for your interest in Beta Testing. Please tell us:\n- Why you want to join\n- Your experience level\n- Any relevant background\n\nA staff member will review your application shortly."
-                var greetPath string = "/channels/" + chanData.id + "/messages"
-                Post greetPath bot.token {"content": welcome}
-                #! update the ephemeral followup to show the channel link
-                var doneMsg string = "✅ Ticket opened in <#" + chanData.id + ">"
-                var followPath string = "/webhooks/" + appId + "/" + interaction.token + "/messages/@original"
-                Patch followPath bot.token {"content": doneMsg}
-            Catch as err:
-                say "   ❌ Ticket error: " + err
-            give empty
-
         CallEvent bot "interaction" interaction
         give empty
 
@@ -351,6 +321,29 @@ fun InteractionReply
     content
     var path string = "/interactions/" + interaction.id + "/" + interaction.token + "/callback"
     Post path token {"type": 4, "data": {"content": content}}
+
+#! Send an ephemeral (blue, user-only) reply to an interaction
+fun InteractionEphemeral
+    token
+    interaction
+    content
+    var path string = "/interactions/" + interaction.id + "/" + interaction.token + "/callback"
+    Post path token {"type": 4, "data": {"content": content, "flags": 64}}
+
+#! Defer an interaction (show loading, then send followup later)
+fun InteractionDefer
+    token
+    interaction
+    var path string = "/interactions/" + interaction.id + "/" + interaction.token + "/callback"
+    Post path token {"type": 5}
+
+#! Edit the original interaction response (followup via webhook)
+fun InteractionEdit
+    token
+    interaction
+    content
+    var path string = "/webhooks/" + interaction.application_id + "/" + interaction.token + "/messages/@original"
+    Patch path token {"content": content}
 
 fun InteractionEmbed
     token
@@ -497,26 +490,29 @@ fun Run
         seq is event.s
 
         if op == 0
-            var t string = event.t
-            var d dynamic = event.d
+            do:
+                var t string = event.t
+                var d dynamic = event.d
 
+                if t == "READY"
+                    bot.user is d.user
+                    say "✅ Logged in: " + d.user.username
+                    CallEvent bot "ready" d
 
-            if t == "READY"
-                bot.user is d.user
-                say "✅ Logged in: " + d.user.username
-                CallEvent bot "ready" d
+                or t == "MESSAGE_CREATE"
+                    HandleMessage bot bot.token d
 
-            or t == "MESSAGE_CREATE"
-                HandleMessage bot bot.token d
+                or t == "INTERACTION_CREATE"
+                    HandleInteraction bot bot.token d
 
-            or t == "INTERACTION_CREATE"
-                HandleInteraction bot bot.token d
+                or t == "GUILD_CREATE"
+                    CallEvent bot "guild_join" d
 
-            or t == "GUILD_CREATE"
-                CallEvent bot "guild_join" d
+                or t == "GUILD_MEMBER_ADD"
+                    CallEvent bot "member_join" d
 
-            or t == "GUILD_MEMBER_ADD"
-                CallEvent bot "member_join" d
+            catch as err:
+                say "   ⚠️ Event error (non-fatal): " + err
         or op == 1
             var hb dynamic = {"op": 1, "d": seq}
             var hbStr string = json_dumps hb
