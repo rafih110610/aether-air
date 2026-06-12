@@ -726,3 +726,21 @@ fun SimpleCommand
     var _cmds3 dynamic = bot.commands
     _cmds3[name] is cmd
     bot.commands is _cmds3
+
+#! Register a cog — batch-import a list of command definitions from a puzzle file.
+#! Each command entry:
+#!   {"name": "cmd", "desc": "Help text", "reply": "response text"}
+#!   or {"name": "cmd", "desc": "Help text", "handler": handlerFunction}
+fun RegisterCog
+    bot
+    cmds
+    repeat cmd in cmds
+        var name string = cmd.name
+        var desc string = cmd.desc
+        var reply string = cmd.reply
+        if reply != empty
+            SimpleCommand bot name desc reply
+        otherwise
+            var handlerFunc dynamic = cmd.handler
+            if handlerFunc != empty
+                AddCommand bot name desc handlerFunc
