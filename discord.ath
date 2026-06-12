@@ -612,24 +612,42 @@ fun ParsePuzzle
         if trimmed == "end"
             break
 
-        #! command declaration
+        #! command declaration — supports two formats:
+        #!   command "name" "desc" "reply"       (one-line, all in one)
+        #!   command "name" "desc"               (multi-line, followed by reply block)
+        #!   name "desc" "reply"                 (shorthand, no command keyword)
+        var isCmd int = 0
+        var rawRest string = ""
         if len(trimmed) >= 8
             if trimmed[:8] == "command "
-                var rest string = trim trimmed[8:]
-                var parts dynamic = split rest " "
-                if len(parts) >= 1
-                    var rawCmd string = parts[0]
-                    var cmdLen int = len(rawCmd)
-                    if cmdLen >= 2
-                        if rawCmd[:1] == "\""
-                            rawCmd is rawCmd[1:cmdLen - 1]
-                    currentCmd is rawCmd
-                    currentDesc is ""
-                    if len(parts) >= 2
-                        currentDesc is parts[1:]
-                next
+                isCmd is 1
+                rawRest is trim trimmed[8:]
+        if not isCmd and trimmed[:1] == "\""
+            isCmd is 1
+            rawRest is trimmed
+        if isCmd
+            var parts dynamic = split rawRest " "
+            if len(parts) >= 1
+                var rawName string = parts[0]
+                var nameLen int = len(rawName)
+                if nameLen >= 2
+                    if rawName[:1] == "\""
+                        rawName is rawName[1:nameLen - 1]
+                currentCmd is rawName
+                currentDesc is ""
+                if len(parts) >= 2
+                    currentDesc is parts[1:]
+                #! one-liner: third part is the reply text
+                if len(parts) >= 3
+                    var rawReply string = parts[2]
+                    var replyLen int = len(rawReply)
+                    if replyLen >= 2
+                        if rawReply[:1] == "\""
+                            rawReply is rawReply[1:replyLen - 1]
+                    RegisterPuzzleCommand bot puzzleName currentCmd currentDesc rawReply
+            next
 
-        #! reply body
+        #! reply body (multi-line, after command declaration)
         if len(trimmed) >= 6
             if trimmed[:6] == "reply "
                 var content string = trim trimmed[6:]
