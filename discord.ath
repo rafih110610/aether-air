@@ -1,20 +1,26 @@
 #! =============================================================================
-#! discord.ath — The easiest Discord bot library in the world
+#! discord.ath — Discord.py for Aether (easier wording, same power)
 #! =============================================================================
 #!
-#! 🚀 SIMPLEST BOT (3 lines):
+#! 🚀 3-line bot:
 #!   get QuickBot from discord
 #!   var bot dynamic = QuickBot "TOKEN" "!"
 #!   Run bot
 #!
-#! ⚡ WITH COMMANDS (6 lines):
+#! ⚡ With commands:
 #!   get QuickBot from discord
 #!   var bot dynamic = QuickBot "TOKEN" "!"
 #!   AddCommand bot "ping" "Check latency" handler
-#!   On bot "ready" readyHandler
 #!   Run bot
 #!
-#! 🔥 FULL POWER: slash commands, embeds, DMs, reactions, permissions, audit logs
+#! 🔥 Full discord.py power — embeds, buttons, slash commands, DMs, permissions
+#!
+#! 📖 discord.py users: ctx is your friend!
+#!   fun greet
+#!       ctx        # ← context: author, channel, guild, token, source
+#!       args
+#!       CtxSend ctx "Hello!"
+#!       CtxReply ctx "Welcome!"
 #! =============================================================================
 
 #! ---- constants ----
@@ -779,3 +785,102 @@ fun RegisterCog
         var handlerName string = cmd.handler_name
         if handlerName != empty
             BotHandler bot name desc handlerName
+
+#! ==============================
+#! 🧭  CONTEXT SYSTEM (discord.py-style)
+#! ==============================
+#!
+#! discord.py's ctx, adapted for Aether.
+#! Since Aether can't store functions in dicts, use helper functions:
+#!   CtxSend  ctx "text"   → sends to channel
+#!   CtxReply ctx "text"   → replies to message/interaction
+#!   CtxEmbed ctx embed    → sends embed
+#!
+#! Handler signature:  fun myHandler  ctx  args
+#!   ctx.author       — the user who ran the command
+#!   ctx.channel_id   — channel ID
+#!   ctx.guild_id     — guild ID (empty in DMs)
+#!   ctx.token        — bot token
+#!   ctx.source       — raw message or interaction
+#!   ctx.cmd          — command name
+#!   ctx.args         — list of arguments
+#!   ctx.bot          — the bot object
+
+#! Build a context dict from command data
+fun Ctx
+    bot
+    token
+    source
+    cmd
+    args
+    var author dynamic = {}
+    var channelId string = ""
+    var guildId string = ""
+    if has_key source "author"
+        if source.author != empty
+            author is source.author
+            channelId is source.channel_id
+            guildId is source.guild_id
+    if author == empty or author == {}
+        if has_key source "member"
+            author is source.member.user
+            channelId is source.channel_id
+            guildId is source.guild_id
+    if author == empty or author == {}
+        author is {"id": "", "username": "unknown"}
+    give {"bot": bot, "token": token, "source": source, "cmd": cmd, "args": args, "author": author, "channel_id": channelId, "guild_id": guildId}
+
+#! Send a message to the context's channel
+fun CtxSend
+    ctx
+    content
+    give Send ctx.token ctx.channel_id content
+
+#! Reply to the context's source (message reply or interaction reply)
+fun CtxReply
+    ctx
+    content
+    give ReplyTo ctx.token ctx.source content
+
+#! Send an embed to the context's channel
+fun CtxEmbed
+    ctx
+    embed
+    give SendEmbed ctx.token ctx.channel_id embed
+
+#! Send an ephemeral (user-only) reply to an interaction
+fun CtxEphemeral
+    ctx
+    content
+    give InteractionEphemeral ctx.token ctx.source content
+
+#! Edit the original interaction response
+fun CtxEdit
+    ctx
+    content
+    give InteractionEdit ctx.token ctx.source content
+
+#! Get the author's user ID from context
+fun CtxUserId
+    ctx
+    give ctx.author.id
+
+#! Get the author's username from context
+fun CtxUserName
+    ctx
+    give ctx.author.username
+
+#! Check if context is from an interaction (vs message)
+fun CtxIsInteraction
+    ctx
+    give has_key ctx.source "author" == false
+
+#! Get the guild ID (empty string in DMs)
+fun CtxGuildId
+    ctx
+    give ctx.guild_id
+
+#! Get the channel ID
+fun CtxChannelId
+    ctx
+    give ctx.channel_id
