@@ -388,10 +388,10 @@ fun RunCommand
             ReplyTo token source reply
             give empty
 
-        #! Handler-based command
-        var handler dynamic = command.handler
-        if handler != empty
-            command.handler bot token source args
+        #! Handler-based command (string handler name → dispatch via event)
+        var handlerName dynamic = command.handler_name
+        if handlerName != empty
+            CallEvent bot "command" {"cmd": cmd, "token": token, "source": source, "args": args, "handler_name": handlerName}
             give empty
 
         ReplyTo token source "Command has no action"
@@ -432,7 +432,7 @@ fun QuickBot
     prefix
     give {"token": token, "prefix": prefix, "commands": {}, "handlers": {}, "user": {}, "_socketId": 0}
 
-#! Add a prefix command
+#! Add a prefix command (handler = function reference — limited support)
 fun AddCommand
     bot
     name
@@ -441,6 +441,19 @@ fun AddCommand
     var _cmds4 dynamic = bot.commands
     _cmds4[name] is {"description": description, "handler": handler}
     bot.commands is _cmds4
+    give bot
+
+#! Add a handler-based command (handler_name = string function name)
+#! The handler function must be imported into the module that receives
+#! the "command" event. Use with RegisterCog or directly.
+fun BotHandler
+    bot
+    name
+    desc
+    handlerName
+    var _cmds5 dynamic = bot.commands
+    _cmds5[name] is {"description": desc, "handler_name": handlerName}
+    bot.commands is _cmds5
     give bot
 
 #! Add an event handler
@@ -758,7 +771,11 @@ fun RegisterCog
         var reply string = cmd.reply
         if reply != empty
             SimpleCommand bot name desc reply
-        otherwise
-            var handlerFunc dynamic = cmd.handler
-            if handlerFunc != empty
-                AddCommand bot name desc handlerFunc
+            next
+        var handlerFunc dynamic = cmd.handler
+        if handlerFunc != empty
+            AddCommand bot name desc handlerFunc
+            next
+        var handlerName string = cmd.handler_name
+        if handlerName != empty
+            BotHandler bot name desc handlerName
